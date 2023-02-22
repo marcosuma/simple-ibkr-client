@@ -5,6 +5,7 @@ from ibapi.wrapper import EWrapper
 
 logger = logging.getLogger(__name__)
 
+
 class IBApiClient(EWrapper, EClient):
     def __init__(self, callbackFnMap):
         EClient.__init__(self, self)
@@ -16,6 +17,9 @@ class IBApiClient(EWrapper, EClient):
 
     def historicalData(self, reqId, bar):
         self.callbackFnMap[reqId]['historicalData'](reqId, bar)
+
+    def historicalDataEnd(self, reqId: int, start: str, end: str):
+        self.callbackFnMap[reqId]['historicalDataEnd'](reqId, start, end)
 
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)

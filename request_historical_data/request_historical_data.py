@@ -8,8 +8,9 @@ class RequestHistoricalData:
         self.app = app
         self.callbackFnMap = callbackFnMap
 
-    def request_historical_data(self, reqID, contract, interval, timePeriod, dataType, rth, timeFormat, callbackFn):
-        self.callbackFnMap[reqID]['historicalData'] = callbackFn
+    def request_historical_data(self, reqID, contract, interval, timePeriod, dataType, rth, timeFormat, atDatapointFn, afterAllDataFn):
+        self.callbackFnMap[reqID]['historicalData'] = atDatapointFn
+        self.callbackFnMap[reqID]['historicalDataEnd'] = afterAllDataFn
         # https://interactivebrokers.github.io/tws-api/historical_bars.html
         self.app.reqHistoricalData(reqID, contract, '', interval, timePeriod, dataType, rth, timeFormat, False, [])
 
