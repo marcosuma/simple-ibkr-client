@@ -19,6 +19,7 @@ import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
+from scipy.stats import linregress
 from statsmodels.nonparametric.kernel_regression import KernelReg
 import talib as ta
 
@@ -27,8 +28,6 @@ import collections
 import matplotlib
 
 matplotlib.use("MacOSX")
-# from request_historical_data.request_historical_data import RequestHistoricalData
-# from request_market_data.request_market_data import RequestMarketData
 
 
 def run_loop():
@@ -71,6 +70,124 @@ def non_param_kernel_regression(kr, stock_df):
     # print(smoothed_local_max)
     # print(local_max)
     return smooth_prices, smoothed_local_max, smoothed_local_min, f
+
+
+def pivotid(df1, l, n1, n2):  # n1 n2 before and after candle l
+    if l-n1 < 0 or l+n2 >= len(df1):
+        return 0
+
+    pividlow = 1
+    pividhigh = 1
+    for i in range(l-n1, l+n2+1):
+        if df1.low[l] > df1.low[i]:
+            pividlow = 0
+        if df1.high[l] < df1.high[i]:
+            pividhigh = 0
+
+    if pividlow and pividhigh:
+        return 3
+    elif pividlow:
+        return 1
+    elif pividhigh:
+        return 2
+    else:
+        return 0
+
+
+def pointpos(x):
+    if x['pivot'] == 1:
+        return float(x['low']) - 1e-5
+    elif x['pivot'] == 2:
+        return float(x['high']) + 1e-5
+    else:
+        return np.nan
+
+
+def check_if_triangle(candleid, backcandles, df):
+    maxim = np.array([])
+    minim = np.array([])
+    xxmin = np.array([])
+    xxmax = np.array([])
+
+    for i in range(candleid - backcandles, candleid + 1):
+        if df.iloc[i].pivot == 1:
+            minim = np.append(minim, float(df.iloc[i].low))
+            xxmin = np.append(xxmin, i)
+        if df.iloc[i].pivot == 2:
+            maxim = np.append(maxim, float(df.iloc[i].high))
+            xxmax = np.append(xxmax, i)
+
+    if (xxmax.size < 5 and xxmin.size < 5) or xxmax.size == 0 or xxmin.size == 0:
+        raise ValueError(
+            "no triangle found - ((xxmax.size < 3 and xxmin.size < 3) or xxmax.size == 0 or xxmin.size == 0)")
+
+    slmin, intercmin, rmin, pmin, semin = linregress(xxmin, minim)
+    slmax, intercmax, rmax, pmax, semax = linregress(xxmax, maxim)
+
+    # and slmax <= -0.01:
+    if abs(rmax) >= 0.4 and abs(rmin) >= 0.4:  # and abs(slmin) <= 0.001:
+        print(rmin, rmax, candleid)
+        return slmin, intercmin, slmax, intercmax, xxmin, xxmax
+
+    if candleid % 1000 == 0:
+        print(candleid)
+
+    raise ValueError("no triangle found")
+
+
+def afterAllData2(reqId: int, start: str, end: str):
+    df = pd.DataFrame(data=np.array(candlestickData), columns=[
+        "date", "open", "close", "high", "low", "volume"])
+
+    df.reset_index(drop=True, inplace=True)
+    df.isna().sum()
+
+    df['pivot'] = df.apply(lambda x: pivotid(df, x.name, 3, 3), axis=1)
+    df['pointpos'] = df.apply(lambda row: pointpos(row), axis=1)
+
+    backcandles = 100
+    dfpl = df
+
+    fig = go.Figure(data=[go.Candlestick(x=dfpl.index, open=dfpl['open'],
+                    high=dfpl['high'], low=dfpl['low'], close=dfpl['close'])])
+
+    fig.add_scatter(x=dfpl.index, y=dfpl['pointpos'], mode="markers", marker=dict(
+        size=4, color="MediumPurple"), name="pivot")
+
+    candleid = backcandles
+    while candleid < len(dfpl) - 1:
+        try:
+            slmin, intercmin, slmax, intercmax, xxmin, xxmax = check_if_triangle(
+                candleid, backcandles, df)
+            print("Printing line")
+            fig.add_trace(go.Scatter(x=xxmin, y=slmin*xxmin +
+                                     intercmin, mode='lines', name='min slope'))
+            fig.add_trace(go.Scatter(x=xxmax, y=slmax*xxmax +
+                                     intercmax, mode='lines', name='max slope'))
+            fig.update_layout(xaxis_rangeslider_visible=False)
+            candleid += int(backcandles * 0.5)
+        except ValueError as err:
+            print(err)
+            candleid += 1
+            continue
+
+    fig.show()
+
+    # def plotFn():
+    #     dfpl = df
+    #     fig = go.Figure(data=[go.Candlestick(x=dfpl.index,
+    #                                          open=pd.to_numeric(dfpl['open']),
+    #                                          close=pd.to_numeric(
+    #                                              dfpl['close']),
+    #                                          high=pd.to_numeric(dfpl['high']),
+    #                                          low=pd.to_numeric(dfpl['low']))])
+
+    #     fig.add_scatter(x=dfpl.index, y=dfpl['pointpos'], mode="markers", marker=dict(
+    #         size=5, color="MediumPurple"), name="pivot")
+
+    #     fig.show()
+
+    # plotsQueue.append(plotFn)
 
 
 def afterAllData(reqId: int, start: str, end: str):
@@ -315,25 +432,16 @@ if __name__ == "__main__":
 
 ########################### REQUEST HISTORICAL DATA #################################
     gld_id = 1000
-    # gld_contract = Contract()
-    # gld_contract.symbol = 'AAPL'
-    # gld_contract.secType = 'STK'
-    # gld_contract.exchange = 'SMART'
-    # gld_contract.currency = 'USD'
-    # gld_contract.symbol = 'ENEL'
-    # gld_contract.secType = 'STK'
-    # gld_contract.exchange = 'BVME'
-    # gld_contract.currency = 'EUR'
-    eur_usd_contract = Contract()
-    eur_usd_contract.symbol = 'EUR'
-    eur_usd_contract.secType = 'CASH'
-    eur_usd_contract.exchange = 'IDEALPRO'
-    eur_usd_contract.currency = 'USD'
+    contract = Contract()
+    contract.symbol = 'ETH'
+    contract.secType = 'CRYPTO'
+    contract.exchange = 'PAXOS'
+    contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
 
     rhd_object.request_historical_data(
-        reqID=gld_id, contract=eur_usd_contract, interval='1 W', timePeriod='30 mins', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=afterAllData)
+        reqID=gld_id, contract=contract, interval='1 Y', timePeriod='1 day', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=afterAllData2)
 ########################### REQUEST HISTORICAL DATA #################################
 
 ########################### SAVE HISTORICAL DATA USING PANDAS ###################################

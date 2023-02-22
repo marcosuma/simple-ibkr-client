@@ -28,7 +28,7 @@ class Callback():
     def _handleBase(self, reqId, bar):
         # print(reqId, bar)
         self.candlestickData.append(
-            [str(bar.date), float(bar.open), float(bar.close), float(bar.high), float(bar.low)])
+            [str(bar.date), float(bar.open), float(bar.close), float(bar.high), float(bar.low), float(bar.volume)])
         # self.priceByTime["date"].append(bar.date)
         # self.priceByTime["open"].append(bar.open)
         # self.priceByTime["close"].append(bar.close)
