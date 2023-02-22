@@ -124,8 +124,12 @@ def check_if_triangle(candleid, backcandles, df):
     slmin, intercmin, rmin, pmin, semin = linregress(xxmin, minim)
     slmax, intercmax, rmax, pmax, semax = linregress(xxmax, maxim)
 
-    # and slmax <= -0.01:
-    if abs(rmax) >= 0.4 and abs(rmin) >= 0.4:  # and abs(slmin) <= 0.001:
+    # # and slmax <= -0.01:
+    # if abs(rmax) >= 0.4 and abs(rmin) >= 0.4:  # and abs(slmin) <= 0.001:
+    #     print(rmin, rmax, candleid)
+    #     return slmin, intercmin, slmax, intercmax, xxmin, xxmax
+
+    if (slmin >= 0 and slmax < 0) or (slmin > 0 and slmax <= 0):
         print(rmin, rmax, candleid)
         return slmin, intercmin, slmax, intercmax, xxmin, xxmax
 
@@ -159,7 +163,6 @@ def afterAllData2(reqId: int, start: str, end: str):
         try:
             slmin, intercmin, slmax, intercmax, xxmin, xxmax = check_if_triangle(
                 candleid, backcandles, df)
-            print("Printing line")
             fig.add_trace(go.Scatter(x=xxmin, y=slmin*xxmin +
                                      intercmin, mode='lines', name='min slope'))
             fig.add_trace(go.Scatter(x=xxmax, y=slmax*xxmax +
@@ -441,7 +444,7 @@ if __name__ == "__main__":
     rhd_cb = rhd_callback.Callback(candlestickData)
 
     rhd_object.request_historical_data(
-        reqID=gld_id, contract=contract, interval='1 Y', timePeriod='1 day', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=afterAllData2)
+        reqID=gld_id, contract=contract, interval='2 Y', timePeriod='1 day', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=afterAllData2)
 ########################### REQUEST HISTORICAL DATA #################################
 
 ########################### SAVE HISTORICAL DATA USING PANDAS ###################################
