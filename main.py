@@ -28,7 +28,8 @@ import threading
 import collections
 import matplotlib
 
-matplotlib.use("MacOSX")
+# matplotlib.use("MacOSX")
+plt.style.use('fivethirtyeight')
 
 
 def run_loop():
@@ -443,10 +444,10 @@ if __name__ == "__main__":
     contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    ml_processor = ml.MachineLearning(candlestickData)
+    ml_processor = ml.MachineLearning(candlestickData, plotsQueue)
 
     rhd_object.request_historical_data(
-        reqID=gld_id, contract=contract, interval='2 Y', timePeriod='1 day', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=ml_processor.process_data)
+        reqID=gld_id, contract=contract, interval='1 Y', timePeriod='1 hour', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=ml_processor.process_data)
 ########################### REQUEST HISTORICAL DATA #################################
 
 ########################### SAVE HISTORICAL DATA USING PANDAS ###################################
