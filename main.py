@@ -8,6 +8,7 @@ import request_historical_data.callback as rhd_callback
 from place_order.place_order import PlaceOrder
 import pandas as pd
 import machine_learning.machine_learning as ml
+import machine_learning.ml_candlestick_predictor as ml_candlestick_predictor
 import time
 from collections import defaultdict
 from IPython.display import display
@@ -444,10 +445,22 @@ if __name__ == "__main__":
     contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    ml_processor = ml.MachineLearning(candlestickData, plotsQueue)
+    file_to_save = "data-{}-{}-{}-{}.csv".format(
+        contract.symbol, contract.secType, contract.exchange, contract.currency)
+    # ml_processor = ml.MachineLearning(candlestickData, plotsQueue)
+    ml_processor = ml_candlestick_predictor.MLCandlestickPredictor(
+        candlestickData, plotsQueue, file_to_save)
 
-    rhd_object.request_historical_data(
-        reqID=gld_id, contract=contract, interval='1 Y', timePeriod='1 hour', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=ml_processor.process_data)
+    import os
+    if not os.path.exists(file_to_save):
+        rhd_object.request_historical_data(
+            reqID=gld_id, contract=contract, interval='1 Y', timePeriod='1 hour', dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handleEnel, afterAllDataFn=ml_processor.process_data)
+    else:
+        print('File already exists. Loading data from CSV')
+        df = pd.read_csv(file_to_save)
+        ml_processor.process_data_with_file(df)
+
+
 ########################### REQUEST HISTORICAL DATA #################################
 
 ########################### SAVE HISTORICAL DATA USING PANDAS ###################################

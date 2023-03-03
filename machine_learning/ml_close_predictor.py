@@ -30,14 +30,14 @@ class MachineLearning:
         scaler = MinMaxScaler(feature_range=(0,1))
         scaled_data = scaler.fit_transform(dataset)
 
-        train_data = scaled_data[0:training_data_len, :]
+        train_data = scaled_data[0:training_data_len-8, :]
         x_train = []
         y_train = []
 
 
-        for i in range(60, len(train_data)):
+        for i in range(60, len(train_data)-8):
             x_train.append(train_data[i-60:i, 0])
-            y_train.append(train_data[i, 0])
+            y_train.append(train_data[i+8, 0])
             # if i <= 60:
             #     print(x_train)
             #     print(y_train)
@@ -60,14 +60,14 @@ class MachineLearning:
 
             model.compile(optimizer='adam', loss='mean_squared_error')
 
-            model.fit(x_train, y_train, batch_size=64, epochs=100) 
+            model.fit(x_train, y_train, batch_size=32, epochs=2) 
 
             model.save(os.path.dirname(os.path.abspath(__file__)) + "/models/model_1")
 
         # Create test dataset
-        test_data = scaled_data[training_data_len-60: , :]
+        test_data = scaled_data[training_data_len-60:-8, :]
         x_test = []
-        y_test = dataset[training_data_len:, :]
+        y_test = dataset[training_data_len+8:, :]
 
         for i in range(60, len(test_data)):
             x_test.append(test_data[i-60:i, 0])
@@ -84,8 +84,10 @@ class MachineLearning:
 
 
         train = data[:training_data_len]
-        valid = data[training_data_len:]
+        valid = data[training_data_len:-8]
         valid['predictions'] = predictions
+
+        print(valid)
 
         def plotFn():
             # visualize the model
