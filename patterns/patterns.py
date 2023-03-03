@@ -9,6 +9,8 @@ import collections
 import os
 from scipy.signal import argrelextrema
 from statsmodels.nonparametric.kernel_regression import KernelReg
+import talib as ta
+import plotly.graph_objects as go
 
 
 class Patterns:
@@ -35,8 +37,8 @@ class Patterns:
     def __fn_impl(self, stock_df: pd.DataFrame):
         # stock_df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
         #     "Date", "Open", "Close", "High", "Low"])
-        # printCandlestick(stock_df)
-        # marubozuCandles(stock_df)
+        # self.__printCandlestick(stock_df)
+        # self.__marubozuCandles(stock_df)
 
         local_max = argrelextrema(stock_df['high'].values, np.greater)[0]
         local_min = argrelextrema(stock_df['low'].values, np.less)[0]
@@ -215,3 +217,23 @@ class Patterns:
                 patterns['RBOT'].append((window.index[0], window.index[-1]))
 
         return patterns
+
+    def __printCandlestick(self, stock_df):
+        candlestick = go.Candlestick(x=stock_df["Date"],
+                                     open=stock_df["Open"],
+                                     high=stock_df["High"],
+                                     low=stock_df["Low"],
+                                     close=stock_df["Close"])
+        fig = go.Figure(data=[candlestick])
+        fig.layout.xaxis.type = 'category'
+        fig.show()
+
+    def __marubozuCandles(self, stock_df):
+        # Identify the marubozu candles in the dataset
+        stock_df['marubozu'] = ta.CDLMARUBOZU(
+            stock_df['Open'], stock_df['High'], stock_df['Low'], stock_df['Close'])
+        # Subset dataframe for only the marubozu candles
+        marubozu_candles = stock_df[stock_df['marubozu'] != 0]
+
+        # display(marubozu_candles[['Close', 'marubozu']])
+        self.__printCandlestick(marubozu_candles)

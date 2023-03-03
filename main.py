@@ -14,7 +14,6 @@ import plotly.graph_objects as go
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.stats import linregress
-import talib as ta
 
 import threading
 import collections
@@ -31,28 +30,6 @@ askPriceMap = defaultdict(lambda: [])
 bidPriceMap = defaultdict(lambda: [])
 candlestickData = []
 plotsQueue = collections.deque([])
-
-
-def printCandlestick(stock_df):
-    candlestick = go.Candlestick(x=stock_df["Date"],
-                                 open=stock_df["Open"],
-                                 high=stock_df["High"],
-                                 low=stock_df["Low"],
-                                 close=stock_df["Close"])
-    fig = go.Figure(data=[candlestick])
-    fig.layout.xaxis.type = 'category'
-    fig.show()
-
-
-def marubozuCandles(stock_df):
-    # Identify the marubozu candles in the dataset
-    stock_df['marubozu'] = ta.CDLMARUBOZU(
-        stock_df['Open'], stock_df['High'], stock_df['Low'], stock_df['Close'])
-    # Subset dataframe for only the marubozu candles
-    marubozu_candles = stock_df[stock_df['marubozu'] != 0]
-
-    # display(marubozu_candles[['Close', 'marubozu']])
-    printCandlestick(marubozu_candles)
 
 
 def pivotid(df1, l, n1, n2):  # n1 n2 before and after candle l
