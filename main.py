@@ -105,9 +105,8 @@ if __name__ == "__main__":
     # ml_processor = ml.MachineLearning(candlestickData, plotsQueue)
     # ml_processor = ml_candlestick_predictor.MLCandlestickPredictor(
     #     candlestickData, plotsQueue, file_to_save)
-    # processor = patterns.Patterns(candlestickData, plotsQueue, file_to_save)
-    import triangles.triangles as triangles
-    processor = triangles.Triangles(candlestickData, plotsQueue, file_to_save)
+    from technical_indicators.technical_indicators import TechnicalIndicators
+    processor = TechnicalIndicators(candlestickData, plotsQueue, file_to_save)
 
     import os
     if not os.path.exists(file_to_save):
