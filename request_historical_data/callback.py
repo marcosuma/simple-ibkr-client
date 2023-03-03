@@ -25,19 +25,9 @@ class Callback():
         # print("Bitcoin Futures data")
         self._handleBase(reqId, bar)
 
+    def handle(self, reqId, bar):
+        self._handleBase(reqId, bar)
+
     def _handleBase(self, reqId, bar):
-        # print(reqId, bar)
         self.candlestickData.append(
             [str(bar.date), float(bar.open), float(bar.close), float(bar.high), float(bar.low), float(bar.volume)])
-        # self.priceByTime["date"].append(bar.date)
-        # self.priceByTime["open"].append(bar.open)
-        # self.priceByTime["close"].append(bar.close)
-        # self.priceByTime["high"].append(bar.high)
-        # self.priceByTime["low"].append(bar.low)
-        # self.priceByTime[bar.date] = {
-        #     "date": bar.date,
-        #     "open": bar.open,
-        #     "close": bar.close,
-        #     "high": bar.high,
-        #     "low": bar.low,
-        # }

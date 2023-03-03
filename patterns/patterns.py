@@ -1,12 +1,7 @@
 import numpy as np
 import pandas as pd
-import math
-from sklearn.preprocessing import MinMaxScaler
-from keras.models import Sequential, load_model
-from keras.layers import Dense, LSTM
 import matplotlib.pyplot as plt
 import collections
-import os
 from scipy.signal import argrelextrema
 from statsmodels.nonparametric.kernel_regression import KernelReg
 import talib as ta
