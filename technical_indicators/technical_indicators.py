@@ -20,10 +20,11 @@ class TechnicalIndicators(object):
     def process_data(self, reqId: int, start: str, end: str):
         df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
             "date", "open", "close", "high", "low", "volume"])
-        df.to_csv(self.fileToSave)
+        df["close"] = df["close"].astype(float)
         print(df)
 
         self.__fn_impl(df)
+        df.to_csv(self.fileToSave)
 
     def __fn_impl(self, df: pd.DataFrame):
         from technical_indicators.ema.ema import EMA
@@ -34,6 +35,11 @@ class TechnicalIndicators(object):
         RSI().calculate(df)
         MACD().calculate(df)
         BollingerBands().calculate(df)
+
+        df['execute_buy'] = np.where(
+            df['macd_buy_signal'] & df['RSI_30_ok'], df['close'] + 0.05, "NaN")
+        df['execute_sell'] = np.where(
+            df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - 0.05, "NaN")
 
         def plotFn():
             # Construct a 2 x 1 Plotly figure
@@ -104,6 +110,36 @@ class TechnicalIndicators(object):
 
             # MACD
             # Fast Signal (%k)
+            fig.append_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df['execute_buy'],
+                    name='Buy Action',
+                    # showlegend=False,
+                    legendgroup='2',
+                    mode="markers",
+                    marker=dict(
+                        color='green',
+                        line=dict(color='green', width=2),
+                        symbol='triangle-down',
+                    ),
+                ), row=1, col=1
+            )
+            fig.append_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df['execute_sell'],
+                    name='Sell Action',
+                    # showlegend=False,
+                    legendgroup='2',
+                    mode="markers",
+                    marker=dict(
+                        color='red',
+                        line=dict(color='red', width=2),
+                        symbol='triangle-up',
+                    ),
+                ), row=1, col=1
+            )
             fig.append_trace(
                 go.Scatter(
                     x=df.index,

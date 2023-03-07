@@ -25,10 +25,10 @@ class MLCandlestickPredictor:
     def process_data(self, reqId: int, start: str, end: str):
         df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
             "date", "open", "close", "high", "low", "volume"])
-        df.to_csv(self.fileToSave)
         print(df)
 
         self.__fn_impl(df)
+        df.to_csv(self.fileToSave)
 
     def __fn_impl(self, df: pd.DataFrame):
         hist_len = 60  # days

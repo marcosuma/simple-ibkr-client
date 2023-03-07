@@ -21,3 +21,7 @@ class MACD(object):
         df['macd'] = df.index.map(macd)
         df['macd_h'] = df.index.map(macd_h)
         df['macd_s'] = df.index.map(macd_s)
+
+        df['macd_trend'] = np.where(df['macd'] < df['macd_s'], -1, 1)
+        df['macd_buy_signal'] = np.sign(df['macd_trend']).diff().gt(0)
+        df['macd_sell_signal'] = np.sign(df['macd_trend']).diff().lt(0)

@@ -66,20 +66,6 @@ if __name__ == "__main__":
 # bitcoin_futures_contract.exchange = 'CME'
 # bitcoin_futures_contract.lastTradeDateOrContractMonth = '202303'
 
-# enel_id = 1001
-# enel_contract = Contract()
-# enel_contract.symbol = 'ENEL'
-# enel_contract.secType = 'STK'
-# enel_contract.exchange = 'BVME'
-# enel_contract.currency = 'EUR'
-
-# eur_usd_id = 1002
-# eur_usd_contract = Contract()
-# eur_usd_contract.symbol = 'EUR'
-# eur_usd_contract.secType = 'CASH'
-# eur_usd_contract.exchange = 'IDEALPRO'
-# eur_usd_contract.currency = 'USD'
-
 # rmd_object = rmd.RequestMarketData(app, callbackFnMap)
 # rmd_cb = rmd_callback.Callback(askPriceMap, bidPriceMap)
 # rmd_object.request_market_data(
@@ -92,10 +78,10 @@ if __name__ == "__main__":
 ########################### REQUEST HISTORICAL DATA #################################
     gld_id = 1000
     contract = Contract()
-    contract.symbol = 'ETH'
-    contract.secType = 'CRYPTO'
-    contract.exchange = 'PAXOS'
-    contract.currency = 'USD'
+    contract.symbol = 'GBP'
+    contract.secType = 'CASH'
+    contract.exchange = 'IDEALPRO'
+    contract.currency = 'NZD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
     interval = '1 M'
@@ -103,19 +89,33 @@ if __name__ == "__main__":
     file_to_save = "data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     # ml_processor = ml.MachineLearning(candlestickData, plotsQueue)
-    # ml_processor = ml_candlestick_predictor.MLCandlestickPredictor(
-    #     candlestickData, plotsQueue, file_to_save)
+    from machine_learning.ml_candlestick_predictor import MLCandlestickPredictor
+    ml_processor = MLCandlestickPredictor(
+        candlestickData, plotsQueue, file_to_save)
     from technical_indicators.technical_indicators import TechnicalIndicators
-    processor = TechnicalIndicators(candlestickData, plotsQueue, file_to_save)
+    processor_1 = TechnicalIndicators(
+        candlestickData, plotsQueue, file_to_save)
+    from support_resistance.support_resistance import SupportResistance
+    processor_2 = SupportResistance(candlestickData, plotsQueue, file_to_save)
+
+    def combine_fn(reqId, start, end):
+        processor_2.process_data(reqId, start, end)
+        # ml_processor.process_data(reqId, start, end)
+        processor_1.process_data(reqId, start, end)
+
+    def combine_fn_file(df):
+        processor_2.process_data_with_file(df)
+        # ml_processor.process_data_with_file(df)
+        processor_1.process_data_with_file(df)
 
     import os
     if not os.path.exists(file_to_save):
         rhd_object.request_historical_data(
-            reqID=gld_id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handle, afterAllDataFn=processor.process_data)
+            reqID=gld_id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn)
     else:
         print('File already exists. Loading data from CSV')
         df = pd.read_csv(file_to_save)
-        processor.process_data_with_file(df)
+        combine_fn_file(df)
 
 
 ########################### REQUEST HISTORICAL DATA #################################
