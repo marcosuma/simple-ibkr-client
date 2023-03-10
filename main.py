@@ -9,6 +9,7 @@ from collections import defaultdict
 from ib_api_client.ib_api_client import IBApiClient
 from ibapi.contract import Contract
 import matplotlib.pyplot as plt
+from strategy.marsi_strategy import MARSIStrategy
 
 import threading
 import collections
@@ -78,13 +79,13 @@ if __name__ == "__main__":
 ########################### REQUEST HISTORICAL DATA #################################
     id = 1000
     contract = Contract()
-    contract.symbol = 'NZD'
+    contract.symbol = 'GBP'
     contract.secType = 'CASH'
     contract.exchange = 'IDEALPRO'
-    contract.currency = 'JPY'
+    contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    interval = '3 M'
+    interval = '6 M'
     timePeriod = '4 hours'
     file_to_save = "data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
@@ -93,10 +94,12 @@ if __name__ == "__main__":
         candlestickData, plotsQueue, file_to_save)
 
     def combine_fn(reqId, start, end):
-        processor_1.process_data(reqId, start, end)
+        df = processor_1.process_data(reqId, start, end)
+        MARSIStrategy().execute(df)
 
     def combine_fn_file(df):
-        processor_1.process_data_with_file(df)
+        df = processor_1.process_data_with_file(df)
+        MARSIStrategy().execute(df)
 
     import os
     if not os.path.exists(file_to_save):
