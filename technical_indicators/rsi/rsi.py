@@ -6,8 +6,8 @@ class RSI:
     def calculate(self, df: pd.DataFrame):
         df.ta.rsi(close='close', length=14, append=True)
 
-        rsi_above_70 = np.where(df['RSI_14'] >= 70, True, False)
-        rsi_below_30 = np.where(df['RSI_14'] <= 30, True, False)
+        rsi_above_70 = np.where(df['RSI_14'] >= 72, True, False)
+        rsi_below_30 = np.where(df['RSI_14'] <= 28, True, False)
         df['RSI_30_ok'] = rsi_below_30
         df['RSI_70_ok'] = rsi_above_70
 
