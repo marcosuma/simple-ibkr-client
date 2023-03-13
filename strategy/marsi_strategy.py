@@ -10,4 +10,8 @@ class MARSIStrategy(object):
         df['execute_sell'] = np.where(
             df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - df['close_std'], "NaN")
 
-        Tester().test_with_sl_and_pt(df)
+        profits, buydates, selldates, buyprices, sellprices, long_short = Tester(
+        ).test_with_sl_and_pt(df)
+
+        for x in zip(profits, buydates, selldates, buyprices, sellprices, long_short):
+            print(x)

@@ -79,14 +79,14 @@ if __name__ == "__main__":
 ########################### REQUEST HISTORICAL DATA #################################
     id = 1000
     contract = Contract()
-    contract.symbol = 'GBP'
+    contract.symbol = 'USD'
     contract.secType = 'CASH'
     contract.exchange = 'IDEALPRO'
-    contract.currency = 'USD'
+    contract.currency = 'JPY'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
     interval = '6 M'
-    timePeriod = '4 hours'
+    timePeriod = '8 hours'
     file_to_save = "data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     from technical_indicators.technical_indicators import TechnicalIndicators
