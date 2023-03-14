@@ -90,16 +90,19 @@ if __name__ == "__main__":
     file_to_save = "data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     from technical_indicators.technical_indicators import TechnicalIndicators
-    processor_1 = TechnicalIndicators(
+    from plot.plot import Plot
+    technical_indicators = TechnicalIndicators(
         candlestickData, plotsQueue, file_to_save)
 
     def combine_fn(reqId, start, end):
-        df = processor_1.process_data(reqId, start, end)
+        df = technical_indicators.process_data(reqId, start, end)
         MARSIStrategy().execute(df)
+        Plot(df, plotsQueue).plot()
 
     def combine_fn_file(df):
-        df = processor_1.process_data_with_file(df)
+        df = technical_indicators.process_data_with_file(df)
         MARSIStrategy().execute(df)
+        Plot(df, plotsQueue).plot()
 
     import os
     if not os.path.exists(file_to_save):
