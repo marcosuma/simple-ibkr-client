@@ -87,7 +87,7 @@ if __name__ == "__main__":
     rhd_cb = rhd_callback.Callback(candlestickData)
     interval = '6 M'
     timePeriod = '8 hours'
-    file_to_save = "data-{}-{}-{}-{}-{}-{}.csv".format(
+    file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     from technical_indicators.technical_indicators import TechnicalIndicators
     from plot.plot import Plot

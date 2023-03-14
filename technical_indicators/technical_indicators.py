@@ -12,6 +12,7 @@ class TechnicalIndicators(object):
     def process_data_with_file(self, df):
         print("Data loaded from file")
         self.__fn_impl(df)
+        df.to_csv(self.fileToSave)
         return df
 
     # Uses LSTM (Long Short Term Memory) to predict the closing price of an asset
