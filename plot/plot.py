@@ -1,4 +1,3 @@
-import numpy as np
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
@@ -12,7 +11,6 @@ class Plot(object):
         df = self.df
         plotsQueue = self.plotsQueue
         def plotFn():
-            # Construct a 2 x 1 Plotly figure
             fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
             # price Line
             # Candlestick chart for pricing

@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
+
 
 class SVMBuyPredictor:
 
@@ -49,8 +52,7 @@ class SVMBuyPredictor:
         df.dropna(inplace=True)
 
         # Store all predictor variables in a variable X
-        X = df[['open-close', 'high-low', 'RSI_14',
-                'EMA_10', 'SMA_50', 'SMA_200', 'macd', 'macd_h', 'macd_s', 'bollinger_up', 'bollinger_down', 'minus_di', 'plus_di', 'adx']]
+        X = df[['open-close', 'high-low', 'RSI_14', 'minus_di', 'plus_di', 'adx']]
         X.head()
 
         # Target variables
@@ -88,15 +90,34 @@ class SVMBuyPredictor:
         # df['cum_strategy'] = df['strategy_return'].cumsum()
 
         def plotFn():
-            plt.figure(figsize=(16, 8))
-            plt.title('Model')
-            plt.xlabel('Date', fontsize=18)
-            plt.ylabel('Close price', fontsize=18)
+            fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['cum_ret'],
+                line=dict(color='red', width=2),
+                showlegend=False), row=1, col=1)
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['cum_strategy'],
+                line=dict(color='blue', width=2),
+                showlegend=False), row=1, col=1)
 
-            plt.plot(df['cum_ret'], color='red')
-            plt.plot(df['cum_strategy'], color='blue')
-
-            plt.show()
+            # Make it pretty
+            layout = go.Layout(
+                plot_bgcolor='#efefef',
+                # Font Families
+                font_family='Monospace',
+                font_color='#000000',
+                font_size=20,
+                xaxis=dict(
+                    rangeslider=dict(
+                        visible=False
+                    )
+                )
+            )
+            # Update options and show plot
+            fig.update_layout(layout)
+            fig.show()
 
         self.plotsQueue.append(plotFn)
 
