@@ -28,17 +28,47 @@ class Plot(object):
                     showlegend=False
                 ), row=1, col=1
             )
-            # EMA 10
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df['EMA_10'],
-                    line=dict(color='black', width=2),
-                    name='EMA 10',
-                    # showlegend=False,
-                    legendgroup='2',
-                ), row=1, col=1
-            )
+            # fig.append_trace(
+            #     go.Scatter(
+            #         x=df.index,
+            #         y=df['execute_buy'],
+            #         name='Buy Action',
+            #         # showlegend=False,
+            #         legendgroup='2',
+            #         mode="markers",
+            #         marker=dict(
+            #             color='green',
+            #             line=dict(color='green', width=2),
+            #             symbol='triangle-down',
+            #         ),
+            #     ), row=1, col=1
+            # )
+            # fig.append_trace(
+            #     go.Scatter(
+            #         x=df.index,
+            #         y=df['execute_sell'],
+            #         name='Sell Action',
+            #         # showlegend=False,
+            #         legendgroup='2',
+            #         mode="markers",
+            #         marker=dict(
+            #             color='red',
+            #             line=dict(color='red', width=2),
+            #             symbol='triangle-up',
+            #         ),
+            #     ), row=1, col=1
+            # )
+            # # EMA 10
+            # fig.append_trace(
+            #     go.Scatter(
+            #         x=df.index,
+            #         y=df['EMA_10'],
+            #         line=dict(color='black', width=2),
+            #         name='EMA 10',
+            #         # showlegend=False,
+            #         legendgroup='2',
+            #     ), row=1, col=1
+            # )
             # # Bollinger up
             # fig.append_trace(
             #     go.Scatter(
@@ -78,70 +108,57 @@ class Plot(object):
             fig.add_hline(y=70, col=1, row=2, line_color='#336699',
                           line_width=2, line_dash='dash')
 
-            # MACD
-            # Fast Signal (%k)
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df['execute_buy'],
-                    name='Buy Action',
-                    # showlegend=False,
-                    legendgroup='2',
-                    mode="markers",
-                    marker=dict(
-                        color='green',
-                        line=dict(color='green', width=2),
-                        symbol='triangle-down',
-                    ),
-                ), row=1, col=1
-            )
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df['execute_sell'],
-                    name='Sell Action',
-                    # showlegend=False,
-                    legendgroup='2',
-                    mode="markers",
-                    marker=dict(
-                        color='red',
-                        line=dict(color='red', width=2),
-                        symbol='triangle-up',
-                    ),
-                ), row=1, col=1
-            )
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df['macd'],
-                    line=dict(color='#ff9900', width=2),
-                    name='macd',
-                    # showlegend=False,
-                    legendgroup='2',
-                ), row=3, col=1
-            )
-            # Slow signal (%d)
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df['macd_s'],
-                    line=dict(color='#000000', width=2),
-                    # showlegend=False,
-                    legendgroup='2',
-                    name='signal'
-                ), row=3, col=1
-            )
-            # Colorize the histogram values
-            colors = np.where(df['macd_h'] < 0, 'red', 'green')
-            # Plot the histogram
-            fig.append_trace(
-                go.Bar(
-                    x=df.index,
-                    y=df['macd_h'],
-                    name='histogram',
-                    marker_color=colors,
-                ), row=3, col=1
-            )
+            # # MACD
+            # # Fast Signal (%k)
+            # fig.append_trace(
+            #     go.Scatter(
+            #         x=df.index,
+            #         y=df['macd'],
+            #         line=dict(color='#ff9900', width=2),
+            #         name='macd',
+            #         # showlegend=False,
+            #         legendgroup='2',
+            #     ), row=3, col=1
+            # )
+            # # Slow signal (%d)
+            # fig.append_trace(
+            #     go.Scatter(
+            #         x=df.index,
+            #         y=df['macd_s'],
+            #         line=dict(color='#000000', width=2),
+            #         # showlegend=False,
+            #         legendgroup='2',
+            #         name='signal'
+            #     ), row=3, col=1
+            # )
+            # # Colorize the histogram values
+            # colors = np.where(df['macd_h'] < 0, 'red', 'green')
+            # # Plot the histogram
+            # fig.append_trace(
+            #     go.Bar(
+            #         x=df.index,
+            #         y=df['macd_h'],
+            #         name='histogram',
+            #         marker_color=colors,
+            #     ), row=3, col=1
+            # )
+
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['adx'],
+                line=dict(color='blue', width=2),
+                showlegend=False), row=3, col=1)
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['plus_di'],
+                line=dict(color='green', width=2),
+                showlegend=False), row=3, col=1)
+            fig.add_trace(go.Scatter(
+                x=df.index,
+                y=df['minus_di'],
+                line=dict(color='red', width=2),
+                showlegend=False), row=3, col=1)
+
 
             # Make it pretty
             layout = go.Layout(

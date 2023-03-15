@@ -26,8 +26,8 @@ class Tester(object):
                     long_short.append("Long")
                     sl = row.open - 2 * row.open_std
                     tp = row.open + 10 * row.open_std
-                    print('stop loss: ' + str(sl) +
-                          ' target profit: ' + str(tp))
+                    # print('stop loss: ' + str(sl) +
+                    #       ' target profit: ' + str(tp))
                     continue
                 if not in_position and row.execute_sell != "NaN":
                     sellprice = row.shifted_open
@@ -38,8 +38,8 @@ class Tester(object):
                     long_short.append("Short")
                     tp = row.open - 10 * row.open_std
                     sl = row.open + 2 * row.open_std
-                    print('stop loss: ' + str(sl) +
-                          ' target profit: ' + str(tp))
+                    # print('stop loss: ' + str(sl) +
+                    #       ' target profit: ' + str(tp))
                     continue
                 if in_position:
                     if is_long:

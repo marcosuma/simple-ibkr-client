@@ -20,6 +20,7 @@ class TechnicalIndicators(object):
     def process_data(self, reqId: int, start: str, end: str):
         df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
             "date", "open", "close", "high", "low", "volume"])
+        df["date"] = df["date"].astype(int)
         df["close"] = df["close"].astype(float)
         df["open"] = df["open"].astype(float)
         df["high"] = df["high"].astype(float)
@@ -36,11 +37,13 @@ class TechnicalIndicators(object):
         from technical_indicators.ema.ema import EMA
         from technical_indicators.rsi.rsi import RSI
         from technical_indicators.macd.macd import MACD
+        from technical_indicators.adx.adx import ADX
         from technical_indicators.bollinger_bands.bollinger_bands import BollingerBands
         SMA().calculate(df)
         EMA().calculate(df)
         RSI().calculate(df)
         MACD().calculate(df)
+        ADX().calculate(df)
         BollingerBands().calculate(df)
 
 

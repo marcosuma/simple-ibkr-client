@@ -79,18 +79,18 @@ if __name__ == "__main__":
 ########################### REQUEST HISTORICAL DATA #################################
     id = 1000
     contract = Contract()
-    contract.symbol = 'USD'
-    contract.secType = 'CASH'
-    contract.exchange = 'IDEALPRO'
-    contract.currency = 'JPY'
+    contract.symbol = 'ETH'
+    contract.secType = 'CRYPTO'
+    contract.exchange = 'PAXOS'
+    contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
     interval = '1 Y'
-    timePeriod = '1 day'
+    timePeriod = '1 hour'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     from technical_indicators.technical_indicators import TechnicalIndicators
-    from machine_learning.ml_average_predictor import MLAveragePredictor
+    from machine_learning.svm_buy_predictor import SVMBuyPredictor
     from plot.plot import Plot
     technical_indicators = TechnicalIndicators(
         candlestickData, plotsQueue, file_to_save)
@@ -98,14 +98,14 @@ if __name__ == "__main__":
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
         MARSIStrategy().execute(df)
-        df, prediction_results = MLAveragePredictor(
+        df, _ = SVMBuyPredictor(
             plotsQueue, file_to_save).process_data_with_file(df)
         Plot(df, plotsQueue).plot()
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
         MARSIStrategy().execute(df)
-        df, prediction_results = MLAveragePredictor(
+        df, _ = SVMBuyPredictor(
             plotsQueue, file_to_save).process_data_with_file(df)
         Plot(df, plotsQueue).plot()
 

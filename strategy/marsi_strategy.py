@@ -13,5 +13,5 @@ class MARSIStrategy(object):
         profits, buydates, selldates, buyprices, sellprices, long_short = Tester(
         ).test_with_sl_and_pt(df)
 
-        for x in zip(profits, buydates, selldates, buyprices, sellprices, long_short):
-            print(x)
+        # for x in zip(profits, buydates, selldates, buyprices, sellprices, long_short):
+        #     print(x)
