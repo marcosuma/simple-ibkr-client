@@ -26,7 +26,8 @@ class SVMBuyPredictor:
         # Changes The Date column as index columns
         from datetime import datetime
         df['date'] = df.apply(lambda row: datetime.utcfromtimestamp(
-            row.date).strftime('%Y-%m-%d'), axis=1)
+            row.date).strftime('%Y-%m-%d %H:%M:%S'), axis=1)
+        # df["date"] = df["date"].astype('datetime64[ns]')
         df.index = pd.to_datetime(df['date'])
 
         # drop The original date column
@@ -58,7 +59,7 @@ class SVMBuyPredictor:
         # Target variables
         y = np.where(df['close'] > df['close'].shift(1), 1, -1)
 
-        split = int(0.7*len(df))
+        split = int(0.9*len(df))
         # Train data set
         X_train = X[:split]
         y_train = y[:split]
@@ -84,10 +85,8 @@ class SVMBuyPredictor:
         df["cum_ret"] = df["return"].cumsum().apply(np.exp)
         df["cum_strategy"] = df["strategy_return"].cumsum().apply(np.exp)
 
-        # # Calculate Cumulutive returns
-        # df['cum_ret'] = df['return'].cumsum()
-        # # Plot Strategy Cumulative returns
-        # df['cum_strategy'] = df['strategy_return'].cumsum()
+        from machine_learning.tester import Tester
+        Tester().test(df, 10_000)
 
         def plotFn():
             fig = make_subplots(rows=1, cols=1, shared_xaxes=True)

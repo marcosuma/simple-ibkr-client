@@ -4,11 +4,11 @@
 # contract.exchange = 'PAXOS'
 # contract.currency = 'USD'
 
-# eur_usd_contract = Contract()
-# eur_usd_contract.symbol = 'EUR'
-# eur_usd_contract.secType = 'CASH'
-# eur_usd_contract.exchange = 'IDEALPRO'
-# eur_usd_contract.currency = 'USD'
+# contract = Contract()
+# contract.symbol = 'EUR'
+# contract.secType = 'CASH'
+# contract.exchange = 'IDEALPRO'
+# contract.currency = 'USD'
 
 # enel_contract = Contract()
 # enel_contract.symbol = 'ENEL'
