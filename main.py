@@ -85,11 +85,12 @@ if __name__ == "__main__":
     contract.currency = 'JPY'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    interval = '6 M'
-    timePeriod = '8 hours'
+    interval = '1 Y'
+    timePeriod = '1 day'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     from technical_indicators.technical_indicators import TechnicalIndicators
+    from machine_learning.ml_average_predictor import MLAveragePredictor
     from plot.plot import Plot
     technical_indicators = TechnicalIndicators(
         candlestickData, plotsQueue, file_to_save)
@@ -97,17 +98,21 @@ if __name__ == "__main__":
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
         MARSIStrategy().execute(df)
+        df, prediction_results = MLAveragePredictor(
+            plotsQueue, file_to_save).process_data_with_file(df)
         Plot(df, plotsQueue).plot()
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
         MARSIStrategy().execute(df)
+        df, prediction_results = MLAveragePredictor(
+            plotsQueue, file_to_save).process_data_with_file(df)
         Plot(df, plotsQueue).plot()
 
     import os
     if not os.path.exists(file_to_save):
         rhd_object.request_historical_data(
-            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='BID', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn)
+            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn)
     else:
         print('File already exists. Loading data from CSV')
         df = pd.read_csv(file_to_save)
