@@ -46,6 +46,9 @@ class TechnicalIndicators(object):
         ADX().calculate(df)
         BollingerBands().calculate(df)
 
+        from stockstats import wrap
+        ss_df = wrap(df)
+
 
 """
 # View our data
