@@ -3,13 +3,12 @@ import pandas as pd
 
 
 class TechnicalIndicators(object):
-    def __init__(self, candlestickData, plotsQueue, fileToSave):
+    def __init__(self, candlestickData, fileToSave):
         self.candlestickData = candlestickData
-        self.plotsQueue = plotsQueue
         self.fileToSave = fileToSave
         pass
 
-    def process_data_with_file(self, df):
+    def process_data_with_file(self, df) -> pd.DataFrame:
         print("Data loaded from file")
         self.__fn_impl(df)
         df.to_csv(self.fileToSave)

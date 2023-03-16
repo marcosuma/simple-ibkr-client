@@ -1,5 +1,5 @@
 import numpy as np
-from strategy.tester import Tester
+from marsi_strategy.tester import Tester
 
 
 class MARSIStrategy(object):

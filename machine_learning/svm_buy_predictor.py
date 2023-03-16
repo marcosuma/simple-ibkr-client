@@ -1,12 +1,14 @@
 import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
 
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
+
+import os
+import pickle
 
 
 class SVMBuyPredictor:
@@ -54,7 +56,6 @@ class SVMBuyPredictor:
 
         # Store all predictor variables in a variable X
         X = df[['open-close', 'high-low', 'RSI_14', 'minus_di', 'plus_di', 'adx']]
-        X.head()
 
         # Target variables
         y = np.where(df['close'] > df['close'].shift(1), 1, -1)
@@ -68,12 +69,21 @@ class SVMBuyPredictor:
         X_test = X[split:]
         y_test = y[split:]
 
-        # Support vector classifier
-        cls = SVC().fit(X_train, y_train)
+        model_filename_path = os.path.dirname(
+            os.path.abspath(__file__)) + "/models/{}-{}.sav".format(
+            self.fileToSave.split("/")[1].split(".")[0].strip(), os.path.basename(__file__).split(".")[0])
+        try:
+            model = pickle.load(open(model_filename_path, 'rb'))
+            print("Model correctly loaded")
+        except OSError:
+            # Support vector classifier
+            model = SVC()
+            model = model.fit(X_train, y_train)
+            pickle.dump(model, open(model_filename_path, 'wb'))
 
-        df['predicted_signal'] = cls.predict(X)
+        df['predicted_signal'] = model.predict(X)
 
-        y_pred = cls.predict(X_test)
+        y_pred = model.predict(X_test)
         print("Test accuracy: ", accuracy_score(y_test, y_pred))
 
         # Calculate daily returns
@@ -120,4 +130,4 @@ class SVMBuyPredictor:
 
         self.plotsQueue.append(plotFn)
 
-        return _df, None
+        return _df, model

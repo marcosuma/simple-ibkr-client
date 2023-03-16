@@ -21,6 +21,9 @@ class IBApiClient(EWrapper, EClient):
     def historicalDataEnd(self, reqId: int, start: str, end: str):
         self.callbackFnMap[reqId]['historicalDataEnd'](reqId, start, end)
 
+    def historicalDataUpdate(self, reqId, bar):
+        self.callbackFnMap[reqId]['historicalDataUpdate'](reqId, bar)
+
     def nextValidId(self, orderId: int):
         super().nextValidId(orderId)
         self.nextorderId = orderId

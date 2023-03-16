@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+from svm_strategy.svm_strategy import SVMStrategy
+from marsi_strategy.marsi_strategy import MARSIStrategy
 import request_historical_data.request_historical_data as rhd
 import request_historical_data.callback as rhd_callback
 import pandas as pd
@@ -9,10 +11,12 @@ from collections import defaultdict
 from ib_api_client.ib_api_client import IBApiClient
 from ibapi.contract import Contract
 import matplotlib.pyplot as plt
-from strategy.marsi_strategy import MARSIStrategy
 
 import threading
 import collections
+
+from technical_indicators.technical_indicators import TechnicalIndicators
+from machine_learning.svm_buy_predictor import SVMBuyPredictor
 
 # matplotlib.use("MacOSX")
 plt.style.use('fivethirtyeight')
@@ -47,78 +51,71 @@ if __name__ == "__main__":
             print("Waiting for connection to server")
             time.sleep(1)
 
-########################### PLACE ORDER #################################
-    # place_order = PlaceOrder(app)
-    # place_order.execute_order(
-    #     place_order.get_fx_order_contract(symbol="USD", currency="SGD"),
-    #     place_order.get_order(action='SELL', qty=10000,
-    #                           order_type='MKT')
-    # )
-########################### PLACE ORDER #################################
-
 ########################### REQUEST MARKED DATA #################################
-# app.reqMarketDataType(MarketDataTypeEnum.REALTIME)
-# app.reqMarketDataType(MarketDataTypeEnum.DELAYED)
+    # app.reqMarketDataType(MarketDataTypeEnum.REALTIME)
+    # app.reqMarketDataType(MarketDataTypeEnum.DELAYED)
 
-# bitcoin_futures_id = 1000
-# bitcoin_futures_contract = Contract()
-# bitcoin_futures_contract.symbol = 'BRR'
-# bitcoin_futures_contract.secType = 'FUT'
-# bitcoin_futures_contract.exchange = 'CME'
-# bitcoin_futures_contract.lastTradeDateOrContractMonth = '202303'
+    # id = 1000
+    # contract = Contract()
+    # contract.symbol = 'EUR'
+    # contract.secType = 'CASH'
+    # contract.exchange = 'IDEALPRO'
+    # contract.currency = 'USD'
 
-# rmd_object = rmd.RequestMarketData(app, callbackFnMap)
-# rmd_cb = rmd_callback.Callback(askPriceMap, bidPriceMap)
-# rmd_object.request_market_data(
-#     enel_id, enel_contract, rmd_cb.handleMktDataEnel)
-# request_market_data.request_market_data(id, contract, , handleDataAlibaba)
-# request_market_data.request_market_data(bitcoin_futures_id, bitcoin_futures_contract, handleDataBitcoinFutures)
-# request_market_data.request_market_data(eur_usd_id, eur_usd_contract, handleDataEurUsd)
+    # from request_market_data.request_market_data import RequestMarketData
+    # from request_market_data.callback import Callback as RMDCallback
+    # rmd_object = RequestMarketData(app, callbackFnMap)
+    # rmd_cb = RMDCallback(askPriceMap, bidPriceMap)
+    # rmd_object.request_market_data(
+    #     enel_id, enel_contract, rmd_cb.handleMktDataEnel)
+    # rmd_object.request_market_data(id, contract, , handleDataAlibaba)
+    # request_market_data.request_markeczt_data(bitcoin_futures_id, bitcoin_futures_contract, handleDataBitcoinFutures)
+    # request_market_data.request_market_data(eur_usd_id, eur_usd_contract, handleDataEurUsd)
 ########################### REQUEST MARKED DATA #################################
 
 ########################### REQUEST HISTORICAL DATA #################################
     id = 1000
     contract = Contract()
-    contract.symbol = 'TSLA'
-    contract.secType = 'STK'
-    contract.exchange = 'SMART'
+    contract.symbol = 'EUR'
+    contract.secType = 'CASH'
+    contract.exchange = 'IDEALPRO'
     contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    interval = '6 M'
+    interval = '5 Y'
     timePeriod = '4 hours'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
-    from technical_indicators.technical_indicators import TechnicalIndicators
-    from machine_learning.svm_buy_predictor import SVMBuyPredictor
-    from plot.plot import Plot
     technical_indicators = TechnicalIndicators(
-        candlestickData, plotsQueue, file_to_save)
+        candlestickData, file_to_save)
 
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
         MARSIStrategy().execute(df)
         df, _ = SVMBuyPredictor(
             plotsQueue, file_to_save).process_data_with_file(df)
-        Plot(df, plotsQueue).plot()
+        # Plot(df, plotsQueue).plot()
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
         MARSIStrategy().execute(df)
-        df, _ = SVMBuyPredictor(
+        df, model = SVMBuyPredictor(
             plotsQueue, file_to_save).process_data_with_file(df)
-        Plot(df, plotsQueue).plot()
+        # Plot(df, plotsQueue).plot()
+
+        # Request new historical data in "live" mode so that actions can be taken on the market
+        strategy = SVMStrategy(df, model, file_to_save, app, contract, 10_000)
+        rhd_object.request_historical_data(
+            reqID=id+1, contract=contract, interval="1 D", timePeriod="5 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
     import os
     if not os.path.exists(file_to_save):
         rhd_object.request_historical_data(
-            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn)
+            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
     else:
         print('File already exists. Loading data from CSV')
         df = pd.read_csv(file_to_save)
         combine_fn_file(df)
-
-
 ########################### REQUEST HISTORICAL DATA #################################
 
     while True:

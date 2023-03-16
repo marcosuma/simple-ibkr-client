@@ -26,6 +26,7 @@ class Callback():
         self._handleBase(reqId, bar)
 
     def handle(self, reqId, bar):
+        print("bar: ", bar)
         self._handleBase(reqId, bar)
 
     def _handleBase(self, reqId, bar):

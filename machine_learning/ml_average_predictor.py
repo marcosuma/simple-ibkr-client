@@ -79,8 +79,8 @@ class MLAveragePredictor:
             model.compile(optimizer='adam', loss='mean_squared_error')
             model.fit(x_train, y_train, batch_size=32, epochs=50)
 
-            # model.save(os.path.dirname(
-            #     os.path.abspath(__file__)) + model_filename_path)
+            model.save(os.path.dirname(
+                os.path.abspath(__file__)) + model_filename_path)
 
         predictions = model.predict(x_test)
         predictions = target_scaler.inverse_transform(predictions)
