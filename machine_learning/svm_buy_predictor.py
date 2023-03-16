@@ -10,6 +10,9 @@ from plotly.subplots import make_subplots
 import os
 import pickle
 
+from backtesting import Backtest
+from machine_learning.svm_backtesting.svm_strategy import SVMStrategy
+
 
 class SVMBuyPredictor:
 
@@ -97,6 +100,15 @@ class SVMBuyPredictor:
 
         from machine_learning.tester import Tester
         Tester().test(df, 10_000)
+
+        df['Open'] = df.open
+        df['Close'] = df.close
+        df['High'] = df.high
+        df['Low'] = df.low
+        bt = Backtest(df, SVMStrategy, cash=10_000,
+                      commission=0.0002, exclusive_orders=True)
+        stat = bt.run()
+        print(stat)
 
         def plotFn():
             fig = make_subplots(rows=1, cols=1, shared_xaxes=True)

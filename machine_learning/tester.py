@@ -26,8 +26,8 @@ class Tester(object):
                     # create long position
                     is_long = True
 
-                    long_pos_qty = balance // row.open
-                    balance -= long_pos_qty * row.open
+                    long_pos_qty = balance // row.close
+                    balance -= long_pos_qty * row.close
                     print("opening long position at index:",
                           index, ", balance is now: ", balance)
 
@@ -43,14 +43,14 @@ class Tester(object):
                     # create short position
                     is_long = False
 
-                    short_pos_qty = balance // row.open
-                    balance += short_pos_qty * row.open
+                    short_pos_qty = balance // row.close
+                    balance += short_pos_qty * row.close
                     print("opening short position at index:",
                           index, ", balance is now: ", balance)
 
                 last_value = row.close
 
-            balance += short_pos_qty * last_value
+            balance -= short_pos_qty * last_value
             balance += long_pos_qty * last_value
             print("balance after the strategy is: ", balance)
             return balance
