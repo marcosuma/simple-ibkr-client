@@ -9,49 +9,43 @@ class Tester(object):
         # budget = 100_000
         def test_strategy(df, balance):
             print("balance before strategy: ", balance)
-            is_long = None
-            short_pos_qty, long_pos_qty = 0, 0
+            is_long = False
+            is_short = False
+            size = 0
             last_value = None
 
             for index, row in df.iterrows():
                 if row.predicted_signal == 1:
                     if is_long == True:
                         continue
-                    if is_long == False:
+                    if is_short == True:
                         # close the short position
-                        balance -= short_pos_qty * row.open
-                        print("closing short position at index:",
-                              index, ", balance is now: ", balance)
-                        short_pos_qty = 0
+                        balance += size * row.open
+                        size = 0
+                        is_short = False
                     # create long position
                     is_long = True
 
-                    long_pos_qty = balance // row.close
-                    balance -= long_pos_qty * row.close
-                    print("opening long position at index:",
-                          index, ", balance is now: ", balance)
+                    size = balance // row.close
+                    balance -= size * row.close
 
                 elif row.predicted_signal == -1:
-                    if is_long == False:
+                    if is_short == True:
                         continue
                     if is_long == True:
                         # close the long position
-                        balance += long_pos_qty * row.open
-                        print("closing long position at index:",
-                              index, ", balance is now: ", balance)
-                        long_pos_qty = 0
+                        balance += size * row.open
+                        size = 0
+                        is_long = False
                     # create short position
-                    is_long = False
+                    is_short = True
 
-                    short_pos_qty = balance // row.close
-                    balance += short_pos_qty * row.close
-                    print("opening short position at index:",
-                          index, ", balance is now: ", balance)
+                    size = -balance // row.close
+                    balance -= size * row.close
 
                 last_value = row.close
 
-            balance -= short_pos_qty * last_value
-            balance += long_pos_qty * last_value
+            balance += size * last_value
             print("balance after the strategy is: ", balance)
             return balance
 
