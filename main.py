@@ -35,7 +35,7 @@ if __name__ == "__main__":
 
     callbackFnMap = defaultdict(lambda: defaultdict(lambda: None))
     app = IBApiClient(callbackFnMap)
-    app.connect('127.0.0.1', 7497, 123)
+    app.connect('192.168.50.24', 7497, 123)
 
     # Start the socket in a thread
     api_thread = threading.Thread(target=run_loop, daemon=True)

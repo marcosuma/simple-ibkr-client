@@ -1,10 +1,11 @@
-ipython==8.10.0
+Backtesting==0.3.3
 keras==2.9.0
 matplotlib==3.6.2
 numpy==1.24.2
 pandas==1.5.3
+pandas_ta==0.3.14b0
 plotly==5.13.0
-scikit_learn==1.2.1
+scikit_learn==1.2.2
 scipy==1.10.0
 statsmodels==0.13.5
 TA_Lib==0.4.25

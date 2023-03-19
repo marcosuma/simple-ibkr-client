@@ -133,3 +133,5 @@ dmypy.json
 
 machine_learning/models/
 data*.csv
+
+.DS_Store
