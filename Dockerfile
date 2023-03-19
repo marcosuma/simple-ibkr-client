@@ -30,6 +30,11 @@ RUN python -m pip install -r requirements.txt
 EXPOSE 7497/tcp
 EXPOSE 4002
 
+COPY IBJts /IBJts
+
+RUN cd /IBJts/source/pythonclient && \
+  python setup.py install
+
 WORKDIR /app
 COPY . /app
 

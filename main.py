@@ -104,9 +104,9 @@ if __name__ == "__main__":
         # Plot(df, plotsQueue).plot()
 
         # Request new historical data in "live" mode so that actions can be taken on the market
-        # strategy = SVMStrategy(df, model, file_to_save, app, contract, 10_000)
-        # rhd_object.request_historical_data(
-        #     reqID=id+1, contract=contract, interval="1 D", timePeriod="5 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
+        strategy = SVMStrategy(df, model, file_to_save, app, contract, 10_000)
+        rhd_object.request_historical_data(
+            reqID=id+1, contract=contract, interval="1 D", timePeriod="4 hours", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
     import os
     if not os.path.exists(file_to_save):
