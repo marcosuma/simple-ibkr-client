@@ -4,6 +4,11 @@
 # contract.exchange = 'PAXOS'
 # contract.currency = 'USD'
 
+    # contract.symbol = 'GBP'
+    # contract.secType = 'CASH'
+    # contract.exchange = 'IDEALPRO'
+    # contract.currency = 'NZD'
+
 # contract = Contract()
 # contract.symbol = 'EUR'
 # contract.secType = 'CASH'
