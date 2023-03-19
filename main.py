@@ -114,7 +114,7 @@ if __name__ == "__main__":
             reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
     else:
         print('File already exists. Loading data from CSV')
-        df = pd.read_csv(file_to_save)
+        df = pd.read_csv(file_to_save, index_col=[0])
         combine_fn_file(df)
 ########################### REQUEST HISTORICAL DATA #################################
 
