@@ -22,7 +22,6 @@ RUN rm -R ta-lib ta-lib-0.4.0-src.tar.gz
 
 # Install pip requirements
 COPY requirements.txt .
-# RUN yes | conda install -c conda-forge ta-lib
 RUN pip install --upgrade pip
 RUN pip install --upgrade setuptools
 RUN python -m pip install -r requirements.txt

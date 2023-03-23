@@ -11,7 +11,7 @@ class TechnicalIndicators(object):
     def process_data_with_file(self, df) -> pd.DataFrame:
         print("Data loaded from file")
         self.__fn_impl(df)
-        df.to_csv(self.fileToSave)
+        df.to_csv(self.fileToSave) if self.fileToSave is not None else None
         return df
 
     def process_data(self, reqId: int, start: str, end: str):

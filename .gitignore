@@ -135,3 +135,7 @@ machine_learning/models/
 data*.csv
 
 .DS_Store
+
+env.list
+
+IBJts/

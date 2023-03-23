@@ -13,14 +13,13 @@ class Tester(object):
             is_short = False
             size = 0
             last_value = None
-
             for index, row in df.iterrows():
                 if row.predicted_signal == 1:
                     if is_long == True:
                         continue
                     if is_short == True:
                         # close the short position
-                        balance += size * row.open
+                        balance += size * row.close
                         size = 0
                         is_short = False
                     # create long position
@@ -34,7 +33,7 @@ class Tester(object):
                         continue
                     if is_long == True:
                         # close the long position
-                        balance += size * row.open
+                        balance += size * row.close
                         size = 0
                         is_long = False
                     # create short position

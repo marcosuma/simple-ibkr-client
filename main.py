@@ -36,6 +36,7 @@ if __name__ == "__main__":
     callbackFnMap = defaultdict(lambda: defaultdict(lambda: None))
     app = IBApiClient(callbackFnMap)
     app.connect('192.168.50.24', 7497, 123)
+    # app.connect('127.0.0.1', 8888, 123)
 
     # Start the socket in a thread
     api_thread = threading.Thread(target=run_loop, daemon=True)
@@ -74,16 +75,16 @@ if __name__ == "__main__":
 ########################### REQUEST MARKED DATA #################################
 
 ########################### REQUEST HISTORICAL DATA #################################
-    id = 1000
+    id = app.nextorderId
     contract = Contract()
-    contract.symbol = 'ETH'
-    contract.secType = 'CRYPTO'
-    contract.exchange = 'PAXOS'
+    contract.symbol = 'GBP'
+    contract.secType = 'CASH'
+    contract.exchange = 'IDEALPRO'
     contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(app, callbackFnMap)
     rhd_cb = rhd_callback.Callback(candlestickData)
-    interval = '6 M'
-    timePeriod = '4 hours'
+    interval = '2 Y'
+    timePeriod = '15 mins'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     technical_indicators = TechnicalIndicators(
@@ -104,9 +105,11 @@ if __name__ == "__main__":
         # Plot(df, plotsQueue).plot()
 
         # Request new historical data in "live" mode so that actions can be taken on the market
-        strategy = SVMStrategy(df, model, file_to_save, app, contract, 10_000)
+        strategy = SVMStrategy(df, model, file_to_save, app, contract, 1_000)
+        # The historical data from this call will be simply ignored. We are using it just to get the updates and apply the strategy on them.
+        app.nextorderId += 1
         rhd_object.request_historical_data(
-            reqID=id+1, contract=contract, interval="1 D", timePeriod="4 hours", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
+            reqID=app.nextorderId, contract=contract, interval="1 D", timePeriod="15 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
     import os
     if not os.path.exists(file_to_save):

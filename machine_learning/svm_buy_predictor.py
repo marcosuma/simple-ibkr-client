@@ -23,7 +23,7 @@ class SVMBuyPredictor:
 
     def process_data_with_file(self, df):
         df, predictions = self.__fn_impl(df)
-        df.to_csv(self.fileToSave)
+        # df.to_csv(self.fileToSave)
         return df, predictions
 
     def __fn_impl(self, _df: pd.DataFrame):
@@ -32,38 +32,32 @@ class SVMBuyPredictor:
         from datetime import datetime
         df['date'] = df.apply(lambda row: datetime.utcfromtimestamp(
             row.date).strftime('%Y-%m-%d %H:%M:%S'), axis=1)
-        # df["date"] = df["date"].astype('datetime64[ns]')
         df.index = pd.to_datetime(df['date'])
 
         # drop The original date column
         df = df.drop(['date'], axis='columns')
 
         # Create predictor variables
-        df['open-close'] = df.open.shift(1) - df.close.shift(1)
-        df['high-low'] = df.high.shift(1) - df.low.shift(1)
-        df['EMA_10'] = df['EMA_10'].shift(periods=1)
-        df['SMA_50'] = df['SMA_50'].shift(periods=1)
-        df['SMA_100'] = df['SMA_100'].shift(periods=1)
-        df['SMA_200'] = df['SMA_200'].shift(periods=1)
-        df['RSI_14'] = df['RSI_14'].shift(periods=1)
-        df['macd'] = df['macd'].shift(periods=1)
-        df['macd_h'] = df['macd_h'].shift(periods=1)
-        df['macd_s'] = df['macd_s'].shift(periods=1)
-        df['bollinger_up'] = df['bollinger_up'].shift(periods=1)
-        df['bollinger_down'] = df['bollinger_down'].shift(periods=1)
-        df['adx'] = df['adx'].shift(periods=1)
-        df['plus_di'] = df['plus_di'].shift(periods=1)
-        df['minus_di'] = df['minus_di'].shift(periods=1)
-
+        df['open-close'] = (df.open - df.close) / df.open
+        df['high-low'] = (df.high - df.low) / df.low
+        df['open-close-1'] = df['open-close'].shift(1)
+        df['open-close-2'] = df['open-close'].shift(2)
+        df['open-close-3'] = df['open-close'].shift(3)
+        df['high-low-1'] = df['high-low'].shift(1)
+        df['high-low-2'] = df['high-low'].shift(2)
+        df['high-low-3'] = df['high-low'].shift(3)
+        df['EMA_delta'] = df.close - df.EMA_10
+        df['SMA_200_50'] = df.SMA_200 - df.SMA_50
         df.dropna(inplace=True)
 
-        # Store all predictor variables in a variable X
-        X = df[['open-close', 'high-low', 'RSI_14', 'minus_di', 'plus_di', 'adx']]
-
         # Target variables
-        y = np.where(df['close'] > df['close'].shift(1), 1, -1)
+        y = np.where(df['close'] < df['close'].shift(-1), 1, -1)
 
-        split = int(0.9*len(df))
+        # Store all predictor variables in a variable X
+        X = df[['open-close', 'high-low', 'RSI_14', 'minus_di',
+                'plus_di', 'adx', 'EMA_delta', 'SMA_200_50', 'open-close-1', 'open-close-2', 'open-close-3', 'high-low-1', 'high-low-2', 'high-low-3']]
+
+        split = int(0.7*len(df))
         # Train data set
         X_train = X[:split]
         y_train = y[:split]
@@ -80,11 +74,12 @@ class SVMBuyPredictor:
             print("Model correctly loaded")
         except OSError:
             # Support vector classifier
-            model = SVC()
+            model = SVC(gamma='auto')
             model = model.fit(X_train, y_train)
             pickle.dump(model, open(model_filename_path, 'wb'))
 
         df['predicted_signal'] = model.predict(X)
+        print("predicted_signal: ", df['predicted_signal'].value_counts())
 
         y_pred = model.predict(X_test)
         print("Test accuracy: ", accuracy_score(y_test, y_pred))
@@ -98,15 +93,16 @@ class SVMBuyPredictor:
         df["cum_ret"] = df["return"].cumsum().apply(np.exp)
         df["cum_strategy"] = df["strategy_return"].cumsum().apply(np.exp)
 
+        cash = 100_000
         from machine_learning.tester import Tester
-        Tester().test(df, 10_000)
+        Tester().test(df, cash)
 
         df['Open'] = df.open
         df['Close'] = df.close
         df['High'] = df.high
         df['Low'] = df.low
-        bt = Backtest(df, SVMStrategy, cash=10_000,
-                      commission=0.0002, exclusive_orders=True)
+        bt = Backtest(df, SVMStrategy, cash=cash, commission=0.0002,
+                      exclusive_orders=True)
         stat = bt.run()
         print(stat)
 
