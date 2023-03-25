@@ -30,8 +30,9 @@ class IBApiClient(EWrapper, EClient):
         print('The next valid order id is: ', self.nextorderId)
 
     def orderStatus(self, orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice):
-        print('orderStatus - orderid:', orderId, 'status:', status, 'filled',
-              filled, 'remaining', remaining, 'lastFillPrice', lastFillPrice)
+        if self.callbackFnMap[orderId]['orderStatus'] is not None:
+            self.callbackFnMap[orderId]['orderStatus'](
+                orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice)
 
     def openOrder(self, orderId, contract, order, orderState):
         print('openOrder id:', orderId, contract.symbol, contract.secType, '@', contract.exchange,

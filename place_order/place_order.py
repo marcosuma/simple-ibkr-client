@@ -12,6 +12,7 @@ class PlaceOrder:
 
     def execute_order(self, contract: Contract, order: Order):
         self.app.placeOrder(order.orderId, contract, order)
+        return order.orderId
 
     # def get_fx_order_contract(self, symbol, currency):
     #     contract = Contract()

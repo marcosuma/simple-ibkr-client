@@ -1,26 +1,29 @@
 import pandas as pd
 import numpy as np
 
+from ibapi.contract import Contract
+
+from ibkr_trader.ibkr_trader import IBKRTrader
+
 from place_order.place_order import PlaceOrder
 
 from technical_indicators.technical_indicators import TechnicalIndicators as TI
 
 
 class SVMStrategy(object):
-    def __init__(self, df, model, fileToSave, app, contract, budget):
+    def __init__(self, df, model, fileToSave, app, contract: Contract, trader: IBKRTrader):
         self.df = df
         self.model = model
         self.last_timestamp = None
         self.fileToSave = fileToSave
         self.app = app
         self.contract = contract
-        self.budget = budget
         self.is_long = False
         self.is_short = False
         self.short_pos_qty = 0
         self.long_pos_qty = 0
         self.latest_data = []
-        print("budget before strategy: ", self.budget)
+        self.trader = trader
 
     def executeTrade(self, reqId, bar):
         print(reqId, bar)
@@ -59,9 +62,8 @@ class SVMStrategy(object):
 
             print("prediction is: ", prediction[0])
             # budget = 100_000
-            print("passing price: ", df.tail(1).open.values[0])
-            self.order(prediction, df.tail(
-                1).open.values[0], df.tail(1).date.values[0])
+            print("passing price: ", bar.open)
+            self.order(prediction, bar.open, bar.date)
 
             self.last_timestamp = bar.date
             data = [[int(bar.date), float(bar.open), float(bar.close), float(
@@ -70,66 +72,74 @@ class SVMStrategy(object):
 
     def order(self, prediction, price, date):
         if prediction == 1:
-            if self.is_long == True:
+            if self.trader.isLong(self.contract.symbol) == True:
                 return
-            if self.is_short == True:
-                # close the short position
-                self.budget += self.short_pos_qty * price
-                print("closing short position at index:",
-                      date, ", balance is now: ", self.budget)
-                ########################### PLACE ORDER #################################
-                place_order = PlaceOrder(self.app)
-                place_order.execute_order(
-                    self.contract,
-                    place_order.get_order(action='BUY', qty=-self.short_pos_qty,
-                                          order_type='MKT')
-                )
-                ########################### PLACE ORDER #################################
-                self.short_pos_qty = 0
-                self.is_short = False
-            # create long position
-            self.is_long = True
-            self.long_pos_qty = self.budget // price
-            self.budget -= self.long_pos_qty * price
+            self.trader.buy(self.contract, 'LMT', qty=None,
+                            close_existing_order=True, limit_price=price)
             print("opening long position at index:",
-                  date, ", balance is now: ", self.budget)
-            ########################### PLACE ORDER #################################
-            place_order = PlaceOrder(self.app)
-            place_order.execute_order(
-                self.contract,
-                place_order.get_order(action='BUY', qty=self.long_pos_qty,
-                                      order_type='MKT')
-            )
-            ########################### PLACE ORDER #################################
+                  date, ", with price: ", price)
+            # if self.is_short == True:
+            #     # close the short position
+            #     self.budget += self.short_pos_qty * price
+            #     print("closing short position at index:",
+            #           date, ", balance is now: ", self.budget)
+            #     ########################### PLACE ORDER #################################
+            #     place_order = PlaceOrder(self.app)
+            #     place_order.execute_order(
+            #         self.contract,
+            #         place_order.get_order(action='BUY', qty=-self.short_pos_qty,
+            #                               order_type='LMT', limit_price=price)
+            #     )
+            #     ########################### PLACE ORDER #################################
+            #     self.short_pos_qty = 0
+            #     self.is_short = False
+            # # create long position
+            # self.is_long = True
+            # self.long_pos_qty = self.budget // price
+            # self.budget -= self.long_pos_qty * price
+            # print("opening long position at index:",
+            #       date, ", balance is now: ", self.budget)
+            # ########################### PLACE ORDER #################################
+            # place_order = PlaceOrder(self.app)
+            # place_order.execute_order(
+            #     self.contract,
+            #     place_order.get_order(action='BUY', qty=self.long_pos_qty,
+            #                           order_type='LMT', limit_price=price)
+            # )
+            # ########################### PLACE ORDER #################################
         elif prediction == -1:
-            if self.is_short == True:
+            if self.trader.isShort(self.contract.symbol) == True:
                 return
-            if self.is_long == True:
-                # close the long position
-                self.budget += self.long_pos_qty * price
-                print("closing long position at index:",
-                      date, ", balance is now: ", self.budget)
-                ########################### PLACE ORDER #################################
-                place_order = PlaceOrder(self.app)
-                place_order.execute_order(
-                    self.contract,
-                    place_order.get_order(action='SELL', qty=self.long_pos_qty,
-                                          order_type='MKT')
-                )
-                ########################### PLACE ORDER #################################
-                self.long_pos_qty = 0
-                self.is_long = False
-            # create short position
-            self.is_short = True
-            self.short_pos_qty = -self.budget // price
-            self.budget -= self.short_pos_qty * price
-            ########################### PLACE ORDER #################################
-            place_order = PlaceOrder(self.app)
-            place_order.execute_order(
-                self.contract,
-                place_order.get_order(action='SELL', qty=-self.short_pos_qty,
-                                      order_type='MKT')
-            )
-            ########################### PLACE ORDER #################################
+            self.trader.sell(self.contract, 'LMT', qty=None,
+                             close_existing_order=True, limit_price=price)
             print("opening short position at index:",
-                  date, ", balance is now: ", self.budget)
+                  date, ", with price: ", price)
+            # if self.is_long == True:
+            #     # close the long position
+            #     self.budget += self.long_pos_qty * price
+            #     print("closing long position at index:",
+            #           date, ", balance is now: ", self.budget)
+            #     ########################### PLACE ORDER #################################
+            #     place_order = PlaceOrder(self.app)
+            #     place_order.execute_order(
+            #         self.contract,
+            #         place_order.get_order(action='SELL', qty=self.long_pos_qty,
+            #                               order_type='LMT', limit_price=price)
+            #     )
+            #     ########################### PLACE ORDER #################################
+            #     self.long_pos_qty = 0
+            #     self.is_long = False
+            # # create short position
+            # self.is_short = True
+            # self.short_pos_qty = -self.budget // price
+            # self.budget -= self.short_pos_qty * price
+            # ########################### PLACE ORDER #################################
+            # place_order = PlaceOrder(self.app)
+            # place_order.execute_order(
+            #     self.contract,
+            #     place_order.get_order(action='SELL', qty=-self.short_pos_qty,
+            #                           order_type='LMT', limit_price=price)
+            # )
+            # ########################### PLACE ORDER #################################
+            # print("opening short position at index:",
+            #       date, ", balance is now: ", self.budget)

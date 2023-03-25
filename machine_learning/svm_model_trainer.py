@@ -7,6 +7,8 @@ from sklearn.metrics import accuracy_score
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
+from machine_learning.tester import Tester as MyBacktest
+
 import os
 import pickle
 
@@ -14,7 +16,7 @@ from backtesting import Backtest
 from machine_learning.svm_backtesting.svm_strategy import SVMStrategy
 
 
-class SVMBuyPredictor:
+class SVMModelTrainer(object):
 
     def __init__(self, plotsQueue, fileToSave):
         self.plotsQueue = plotsQueue
@@ -94,13 +96,12 @@ class SVMBuyPredictor:
         df["cum_strategy"] = df["strategy_return"].cumsum().apply(np.exp)
 
         cash = 100_000
-        from machine_learning.tester import Tester
-        Tester().test(df, cash)
 
         df['Open'] = df.open
         df['Close'] = df.close
         df['High'] = df.high
         df['Low'] = df.low
+        MyBacktest().test(df, cash)
         bt = Backtest(df, SVMStrategy, cash=cash, commission=0.0002,
                       exclusive_orders=True)
         stat = bt.run()
