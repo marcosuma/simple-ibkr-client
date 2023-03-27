@@ -3,15 +3,13 @@ import numpy as np
 
 from ibapi.contract import Contract
 
-from ibkr_trader.ibkr_trader import IBKRTrader
-
-from place_order.place_order import PlaceOrder
+from trader.trader import Trader
 
 from technical_indicators.technical_indicators import TechnicalIndicators as TI
 
 
 class SVMStrategy(object):
-    def __init__(self, df, model, fileToSave, app, contract: Contract, trader: IBKRTrader):
+    def __init__(self, df, model, fileToSave, app, contract: Contract, trader: Trader):
         self.df = df
         self.model = model
         self.last_timestamp = None

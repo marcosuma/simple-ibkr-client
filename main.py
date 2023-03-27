@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-from ibkr_trader.ibkr_trader import IBKRTrader
+import oandapyV20
+from trader.trader import Trader
 from svm_strategy.svm_strategy import SVMStrategy
 from marsi_strategy.marsi_strategy import MARSIStrategy
 import request_historical_data.request_historical_data as rhd
@@ -20,6 +21,12 @@ import collections
 from technical_indicators.technical_indicators import TechnicalIndicators
 from machine_learning.svm_model_trainer import SVMModelTrainer
 
+from dotenv import load_dotenv
+import os
+
+load_dotenv('.env')
+
+
 # matplotlib.use("MacOSX")
 plt.style.use('fivethirtyeight')
 
@@ -28,10 +35,10 @@ def run_loop():
     client.run()
 
 
-askPriceMap = defaultdict(lambda: [])
-bidPriceMap = defaultdict(lambda: [])
-candlestickData = []
-plotsQueue = collections.deque([])
+candlestick_data = []
+plots_queue = collections.deque([])
+oanda_client = oandapyV20.API(
+    access_token=os.environ.get('OANDA_ACCESS_TOKEN'), environment='practice')
 
 if __name__ == "__main__":
 
@@ -83,27 +90,28 @@ if __name__ == "__main__":
     contract.exchange = 'IDEALPRO'
     contract.currency = 'USD'
     rhd_object = rhd.RequestHistoricalData(client, callbackFnMap)
-    rhd_cb = rhd_callback.Callback(candlestickData)
+    rhd_cb = rhd_callback.Callback(candlestick_data)
     interval = '2 Y'
     timePeriod = '15 mins'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     technical_indicators = TechnicalIndicators(
-        candlestickData, file_to_save)
+        candlestick_data, file_to_save)
     budget = 100_000
-    trader = IBKRTrader(client, callbackFnMap, budget, existing_positions=None)
+    trader = Trader(ibkr_client=client, oanda_client=oanda_client,
+                    callbackFnMap=callbackFnMap, budget=budget, existing_positions=None)
 
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
         df, _ = SVMModelTrainer(
-            plotsQueue, file_to_save).process_data_with_file(df)
+            plots_queue, file_to_save).process_data_with_file(df)
         MARSIStrategy().execute(df)
-        Plot(df, plotsQueue).plot()
+        Plot(df, plots_queue).plot()
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
         df, model = SVMModelTrainer(
-            plotsQueue, file_to_save).process_data_with_file(df)
+            plots_queue, file_to_save).process_data_with_file(df)
 
         # Request new historical data in "live" mode so that actions can be taken on the market
         strategy = SVMStrategy(df, model, file_to_save,
@@ -125,8 +133,8 @@ if __name__ == "__main__":
 
     while True:
         # manage plots
-        if len(plotsQueue) > 0:
-            seriesFn = plotsQueue.pop()
+        if len(plots_queue) > 0:
+            seriesFn = plots_queue.pop()
             seriesFn()
         else:
             time.sleep(2)

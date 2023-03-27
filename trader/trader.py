@@ -1,20 +1,25 @@
 from ib_api_client.ib_api_client import IBApiClient
 from ibapi.contract import Contract
 
-from place_order.place_order import PlaceOrder
+from place_order.ibkr_place_order import IBKRPlaceOrder
+
+import oandapyV20
+
+from place_order.oanda_place_order import OANDAPlaceOrder
 
 
-class IBKRTrader:
+class Trader:
 
-    def __init__(self, client: IBApiClient, callbackFnMap, budget: float, existing_positions: dict = None) -> None:
+    def __init__(self, ibkr_client: IBApiClient, oanda_client: oandapyV20.API, callbackFnMap, budget: float, existing_positions: dict = None) -> None:
         self.callbackFnMap = callbackFnMap
-        self.client = client
+        self.ibkr_client = ibkr_client
         self.budget = budget
         if existing_positions is not None:
             self.positions = existing_positions
         else:
             self.positions = {}
         self.contract_by_order_id = {}
+        self.oanda_client = oanda_client
 
     def _ibkrOrderStatusFn(self, orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice):
         print('orderStatus - orderid:', orderId, 'status:', status, 'filled',
@@ -40,14 +45,27 @@ class IBKRTrader:
             quantity = self.budget // limit_price
 
         ########################### PLACE ORDER #################################
-        place_order = PlaceOrder(self.client, self.callbackFnMap)
-        order_id = place_order.execute_order(
-            self.contract,
-            place_order.get_order(action='BUY', qty=quantity,
-                                  order_type=order_type, limit_price=limit_price)
+        ibkr_place_order = IBKRPlaceOrder(self.ibkr_client, self.callbackFnMap)
+        order_id = ibkr_place_order.executeOrder(
+            contract,
+            ibkr_place_order.getOrder(action='BUY', qty=quantity,
+                                      order_type=order_type, limit_price=limit_price)
         )
         self.callbackFnMap[order_id]['orderStatus'] = self.ibkrOrderStatusFn
         self.contract_by_order_id[order_id] = contract
+
+        # TODO: max_loss should be setup in some risk management class
+        max_loss = self.budget * 0.01
+        oanda_place_order = OANDAPlaceOrder(self.oanda_client)
+        oanda_place_order.executeOrder(
+            order='BUY',
+            symbol=contract.symbol,
+            limit_price=limit_price,
+            time_in_force='GTC',
+            risk=max_loss,
+            stop_loss=stop_loss,
+            target_profit=target_profit
+        )
         ########################### PLACE ORDER #################################
 
     def sell(self, contract: Contract, order_type: str, quantity: int, close_existing_positions: bool, limit_price=None, stop_loss=None, target_profit=None):
@@ -64,7 +82,7 @@ class IBKRTrader:
             quantity = self.budget // limit_price
 
         ########################### PLACE ORDER #################################
-        place_order = PlaceOrder(self.client, self.callbackFnMap)
+        place_order = IBKRPlaceOrder(self.ibkr_client, self.callbackFnMap)
         order_id = place_order.execute_order(
             self.contract,
             place_order.get_order(action='SELL', qty=quantity,
@@ -72,6 +90,19 @@ class IBKRTrader:
         )
         self.callbackFnMap[order_id]['orderStatus'] = self.ibkrOrderStatusFn
         self.contract_by_order_id[order_id] = contract
+
+        # TODO: max_loss should be setup in some risk management class
+        max_loss = self.budget * 0.01
+        oanda_place_order = OANDAPlaceOrder(self.oanda_client)
+        oanda_place_order.executeOrder(
+            order='SELL',
+            symbol=contract.symbol,
+            limit_price=limit_price,
+            time_in_force='GTC',
+            risk=max_loss,
+            stop_loss=stop_loss,
+            target_profit=target_profit
+        )
         ########################### PLACE ORDER #################################
 
     def positionExists(self, contract_symbol: str):

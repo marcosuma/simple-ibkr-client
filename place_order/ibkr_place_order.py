@@ -6,11 +6,11 @@ from ibapi.order import Order
 logger = logging.getLogger(__name__)
 
 
-class PlaceOrder:
+class IBKRPlaceOrder:
     def __init__(self, app: IBApiClient):
         self.app = app
 
-    def execute_order(self, contract: Contract, order: Order):
+    def executeOrder(self, contract: Contract, order: Order):
         self.app.placeOrder(order.orderId, contract, order)
         return order.orderId
 
@@ -22,7 +22,7 @@ class PlaceOrder:
     #     contract.currency = currency
     #     return contract
 
-    def get_order(self, action: str, qty: int, order_type: str, limit_price=None):
+    def getOrder(self, action: str, qty: int, order_type: str, limit_price=None):
         order = Order()
         self.app.nextorderId += 1
         order.orderId = self.app.nextorderId
