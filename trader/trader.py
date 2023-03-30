@@ -20,23 +20,29 @@ class Trader:
             self.positions = {}
         self.contract_by_order_id = {}
         self.oanda_client = oanda_client
+        self.is_oanda_long = False
+        self.is_oanda_short = False
 
-    def _ibkrOrderStatusFn(self, orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice):
+    def _ibkrOrderStatusFn(self, orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice, order):
         print('orderStatus - orderid:', orderId, 'status:', status, 'filled',
-              filled, 'remaining', remaining, 'lastFillPrice', lastFillPrice)
+              filled, 'remaining', remaining, 'lastFillPrice', lastFillPrice, 'permId', permId, 'parentId', parentId, 'clientId', clientId, 'whyHeld', whyHeld, 'mktCapPrice', mktCapPrice, 'order', order)
         symbol = self.contract_by_order_id[orderId].symbol
-        # TODO: fill positions here...
-        # TODO: then update budget...
+        
         if remaining == 0:
-            self.positions[symbol] = filled
-            self.budget -= avgFullPrice * filled
+            if order == "SELL":
+                filled *= -1
+            self.positions[symbol] = float(filled)
+            self.budget -= float(avgFullPrice) * float(filled)
+
+        print('positions:', self.positions)
+        print('budget:', self.budget)
 
     def buy(self, contract: Contract, order_type: str, quantity: int, close_existing_positions: bool, limit_price=None, stop_loss=None, target_profit=None):
         if close_existing_positions and self.positionExists(contract.symbol) and self.isShort(contract.symbol):
             # close the existing position if it's a short
             quantity = -2 * self.getPositionQty(contract.symbol)
-            print("closing short position in %s mode at price %s and qty %s" % order_type %
-                  limit_price % quantity / 2)
+            print("closing short position in %s mode at price %s and qty %s" %
+                  (order_type, limit_price, (quantity / 2)))
         elif quantity is None:
             # we maximize the quantity based on current budget
             if limit_price is None:
@@ -45,35 +51,39 @@ class Trader:
             quantity = self.budget // limit_price
 
         ########################### PLACE ORDER #################################
-        ibkr_place_order = IBKRPlaceOrder(self.ibkr_client, self.callbackFnMap)
+        ibkr_place_order = IBKRPlaceOrder(self.ibkr_client)
         order_id = ibkr_place_order.executeOrder(
             contract,
             ibkr_place_order.getOrder(action='BUY', qty=quantity,
                                       order_type=order_type, limit_price=limit_price)
         )
-        self.callbackFnMap[order_id]['orderStatus'] = self.ibkrOrderStatusFn
+        self.callbackFnMap[order_id]['orderStatus'] = self._ibkrOrderStatusFn
         self.contract_by_order_id[order_id] = contract
 
         # TODO: max_loss should be setup in some risk management class
+        if self.is_oanda_long:
+            return
         max_loss = self.budget * 0.01
         oanda_place_order = OANDAPlaceOrder(self.oanda_client)
         oanda_place_order.executeOrder(
             order='BUY',
-            symbol=contract.symbol,
+            symbol=contract.symbol + "_" + contract.currency,
             limit_price=limit_price,
             time_in_force='GTC',
             risk=max_loss,
             stop_loss=stop_loss,
             target_profit=target_profit
         )
+        self.is_oanda_long = True
+        self.is_oanda_short = False
         ########################### PLACE ORDER #################################
 
     def sell(self, contract: Contract, order_type: str, quantity: int, close_existing_positions: bool, limit_price=None, stop_loss=None, target_profit=None):
         if close_existing_positions and self.positionExists(contract.symbol) and self.isLong(contract.symbol):
             # close the existing position if it's a short
             quantity = 2 * self.getPositionQty(contract.symbol)
-            print("closing long position in %s mode at price %s and qty %s" % order_type %
-                  limit_price % quantity / 2)
+            print("closing long position in %s mode at price %s and qty %s" %
+                  (order_type, limit_price, (quantity / 2)))
         elif quantity is None:
             # we maximize the quantity based on current budget
             if limit_price is None:
@@ -82,37 +92,41 @@ class Trader:
             quantity = self.budget // limit_price
 
         ########################### PLACE ORDER #################################
-        place_order = IBKRPlaceOrder(self.ibkr_client, self.callbackFnMap)
-        order_id = place_order.execute_order(
-            self.contract,
-            place_order.get_order(action='SELL', qty=quantity,
-                                  order_type=order_type, limit_price=limit_price)
+        place_order = IBKRPlaceOrder(self.ibkr_client)
+        order_id = place_order.executeOrder(
+            contract,
+            place_order.getOrder(action='SELL', qty=quantity,
+                                 order_type=order_type, limit_price=limit_price)
         )
-        self.callbackFnMap[order_id]['orderStatus'] = self.ibkrOrderStatusFn
+        self.callbackFnMap[order_id]['orderStatus'] = self._ibkrOrderStatusFn
         self.contract_by_order_id[order_id] = contract
 
         # TODO: max_loss should be setup in some risk management class
-        max_loss = self.budget * 0.01
+        if self.is_oanda_short:
+            return
+        max_loss = self.budget * 0.001
         oanda_place_order = OANDAPlaceOrder(self.oanda_client)
         oanda_place_order.executeOrder(
             order='SELL',
-            symbol=contract.symbol,
+            symbol=contract.symbol + "_" + contract.currency,
             limit_price=limit_price,
             time_in_force='GTC',
             risk=max_loss,
             stop_loss=stop_loss,
             target_profit=target_profit
         )
+        self.is_oanda_short = True
+        self.is_oanda_long = False
         ########################### PLACE ORDER #################################
 
     def positionExists(self, contract_symbol: str):
         return self.positions.get(contract_symbol) is not None
 
     def isLong(self, contract_symbol: str):
-        return self.positions.get(contract_symbol) > 0
+        return self.positions.get(contract_symbol, 0) > 0
 
     def isShort(self, contract_symbol: str):
-        return self.positions.get(contract_symbol) < 0
+        return self.positions.get(contract_symbol, 0) < 0
 
     def getPositionQty(self, contract_symbol: str):
         return self.positions.get(contract_symbol)

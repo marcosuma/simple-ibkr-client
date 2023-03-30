@@ -15,18 +15,18 @@ class OANDAPlaceOrder(object):
         data = {
             "order": {
                 "instrument": symbol,
-                "price": limit_price,
+                "price": '%.4f'%(round(limit_price, 4)),
                 "stopLossOnFill": {
                     "timeInForce": time_in_force,
-                    "price": stop_loss
+                    "price": '%.4f'%(round(stop_loss, 4))
                 },
                 "takeProfitOnFill": {
                     "timeInForce": time_in_force,
-                    "price": target_profit
+                    "price": '%.4f'%(round(target_profit, 4))
                 },
                 "timeInForce": time_in_force,
                 "units": units,
-                "type": "LIMIT",
+                "type": "STOP",
                 "positionFill": "DEFAULT"
             }
         }

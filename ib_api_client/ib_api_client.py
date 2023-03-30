@@ -11,6 +11,7 @@ class IBApiClient(EWrapper, EClient):
         EClient.__init__(self, self)
         self.callbackFnMap = callbackFnMap
         self.nextorderId = None
+        self.orderTypeById = {}
 
     def tickPrice(self, reqId, tickType, price, attrib):
         self.callbackFnMap[reqId]['mktData'](reqId, tickType, price, attrib)
@@ -32,11 +33,12 @@ class IBApiClient(EWrapper, EClient):
     def orderStatus(self, orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice):
         if self.callbackFnMap[orderId]['orderStatus'] is not None:
             self.callbackFnMap[orderId]['orderStatus'](
-                orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice)
+                orderId, status, filled, remaining, avgFullPrice, permId, parentId, lastFillPrice, clientId, whyHeld, mktCapPrice, self.orderTypeById[orderId])
 
     def openOrder(self, orderId, contract, order, orderState):
         print('openOrder id:', orderId, contract.symbol, contract.secType, '@', contract.exchange,
               ':', order.action, order.orderType, order.totalQuantity, orderState.status)
+        self.orderTypeById[orderId] = order
 
     def execDetails(self, reqId, contract, execution):
         print('Order Executed: ', reqId, contract.symbol, contract.secType, contract.currency,

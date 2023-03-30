@@ -1,6 +1,14 @@
 import numpy as np
 import pandas as pd
 
+from technical_indicators.sma.sma import SMA
+from technical_indicators.ema.ema import EMA
+from technical_indicators.rsi.rsi import RSI
+from technical_indicators.macd.macd import MACD
+from technical_indicators.adx.adx import ADX
+from technical_indicators.bollinger_bands.bollinger_bands import BollingerBands
+from technical_indicators.atr.atr import ATR
+
 
 class TechnicalIndicators(object):
     def __init__(self, candlestickData, fileToSave):
@@ -30,17 +38,12 @@ class TechnicalIndicators(object):
     def __fn_impl(self, df: pd.DataFrame):
         df['shifted_open'] = df.open.shift(-1)
 
-        from technical_indicators.sma.sma import SMA
-        from technical_indicators.ema.ema import EMA
-        from technical_indicators.rsi.rsi import RSI
-        from technical_indicators.macd.macd import MACD
-        from technical_indicators.adx.adx import ADX
-        from technical_indicators.bollinger_bands.bollinger_bands import BollingerBands
         SMA().calculate(df)
         EMA().calculate(df)
         RSI().calculate(df)
         MACD().calculate(df)
         ADX().calculate(df)
+        ATR().calculate(df)
         BollingerBands().calculate(df)
 
         # from stockstats import wrap

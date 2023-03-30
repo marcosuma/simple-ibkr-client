@@ -44,7 +44,7 @@ if __name__ == "__main__":
 
     callbackFnMap = defaultdict(lambda: defaultdict(lambda: None))
     client = IBApiClient(callbackFnMap)
-    client.connect('192.168.50.24', 7497, 123)
+    client.connect('127.0.0.1', 7497, 123)
 
     # Start the socket in a thread
     api_thread = threading.Thread(target=run_loop, daemon=True)
@@ -97,7 +97,7 @@ if __name__ == "__main__":
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     technical_indicators = TechnicalIndicators(
         candlestick_data, file_to_save)
-    budget = 100_000
+    budget = 10_000
     trader = Trader(ibkr_client=client, oanda_client=oanda_client,
                     callbackFnMap=callbackFnMap, budget=budget, existing_positions=None)
 
