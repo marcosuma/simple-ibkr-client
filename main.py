@@ -2,6 +2,8 @@
 # coding: utf-8
 
 import oandapyV20
+import oandapyV20.endpoints.positions as oanda_positions_api
+import oandapyV20.endpoints.accounts as oanda_accounts_api
 from trader.trader import Trader
 from svm_strategy.svm_strategy import SVMStrategy
 from marsi_strategy.marsi_strategy import MARSIStrategy
@@ -34,6 +36,37 @@ plt.style.use('fivethirtyeight')
 def run_loop():
     client.run()
 
+oanda_positions_queue = []
+oanda_account_summary_queue = []
+def updateOpenPosition():
+    while True:
+        accountID = os.environ.get('OANDA_ACCOUNT_ID')
+        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN'))
+        r = oanda_positions_api.OpenPositions(accountID=accountID)
+        client.request(r)
+        oanda_positions_queue.pop() if len(oanda_positions_queue) > 0 else None
+        oanda_positions = {}
+        positions = r.response['positions']
+        for position in positions:
+            instrument = position['instrument']
+            oanda_positions[instrument] = position
+        oanda_positions_queue.append(oanda_positions)
+        # print(oanda_positions_queue)
+        time.sleep(10)
+def updateAccountSummary():
+    while True:
+        accountID = os.environ.get('OANDA_ACCOUNT_ID')
+        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN'))
+
+        r = oanda_accounts_api.AccountSummary(accountID)
+        client.request(r)
+        oanda_account_summary_queue.pop() if len(oanda_account_summary_queue) > 0 else None
+        oanda_account_summary = r.response['account']
+        oanda_account_summary_queue.append(oanda_account_summary)
+        # print(oanda_account_summary_queue)
+        time.sleep(10)
+
+
 
 candlestick_data = []
 plots_queue = collections.deque([])
@@ -49,6 +82,11 @@ if __name__ == "__main__":
     # Start the socket in a thread
     api_thread = threading.Thread(target=run_loop, daemon=True)
     api_thread.start()
+
+    oanda_positions_thread = threading.Thread(target=updateOpenPosition, daemon=True)
+    oanda_positions_thread.start()
+    oanda_account_thread = threading.Thread(target=updateAccountSummary, daemon=True)
+    oanda_account_thread.start()
 
     # time.sleep(1)  # Sleep interval to allow time for connection to server
 
@@ -97,9 +135,9 @@ if __name__ == "__main__":
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     technical_indicators = TechnicalIndicators(
         candlestick_data, file_to_save)
-    budget = 10_000
-    trader = Trader(ibkr_client=client, oanda_client=oanda_client,
-                    callbackFnMap=callbackFnMap, budget=budget, existing_positions=None)
+    budget = 100_000
+    trader = Trader(ibkr_client=client, oanda_client=oanda_client, oanda_positions=oanda_positions_queue, oanda_account_summary=oanda_positions_queue,
+                    callbackFnMap=callbackFnMap, budget=budget)
 
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
