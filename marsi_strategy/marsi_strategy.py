@@ -21,9 +21,9 @@ class MARSIStrategy(object):
         df['macd_sell_signal'] = np.sign(df['macd_trend']).diff().lt(0)
 
         df['execute_buy'] = np.where(
-            df['macd_buy_signal'] & df['RSI_30_ok'], df['close'] + df['close_std'], "NaN")
+            df['macd_buy_signal'] & df['RSI_30_ok'], df['close'] + df['STDEV_30'], "NaN")
         df['execute_sell'] = np.where(
-            df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - df['close_std'], "NaN")
+            df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - df['STDEV_30'], "NaN")
 
         profits, buydates, selldates, buyprices, sellprices, long_short = Tester(
         ).test_with_sl_and_pt(df)
