@@ -19,8 +19,6 @@ class Patterns:
         print("Data loaded from file")
         self.__fn_impl(df)
 
-    # Uses LSTM (Long Short Term Memory) to predict the closing price of an asset
-    # Uses past 60 days
     def process_data(self, reqId: int, start: str, end: str):
         df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
             "date", "open", "close", "high", "low", "volume"])

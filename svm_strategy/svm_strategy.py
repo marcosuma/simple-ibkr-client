@@ -70,16 +70,16 @@ class SVMStrategy(object):
 
     def order(self, prediction, price, date, atr):
         if prediction == 1:
-            if self.trader.isLong(self.contract.symbol) == True:
-                return
+            # if self.trader.isLong(self.contract.symbol) == True:
+            #     return
+            print("trying to open long position at index:",
+                  date, ", with price: ", price)
             self.trader.buy(self.contract, 'LMT', quantity=None,
                             close_existing_positions=True, limit_price=price, stop_loss=price - 2 * atr, target_profit=price + 7 * atr)
-            print("opening long position at index:",
-                  date, ", with price: ", price)
         elif prediction == -1:
-            if self.trader.isShort(self.contract.symbol) == True:
-                return
+            # if self.trader.isShort(self.contract.symbol) == True:
+            #     return
+            print("trying to open short position at index:",
+                  date, ", with price: ", price)
             self.trader.sell(self.contract, 'LMT', quantity=None,
                              close_existing_positions=True, limit_price=price, stop_loss=price + 2 * atr, target_profit=price - 7 * atr)
-            print("opening short position at index:",
-                  date, ", with price: ", price)
