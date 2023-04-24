@@ -59,7 +59,7 @@ class SVMModelTrainer(object):
         X = df[['open-close', 'high-low', 'RSI_14', 'minus_di',
                 'plus_di', 'adx', 'EMA_delta', 'SMA_200_50', 'open-close-1', 'open-close-2', 'open-close-3', 'high-low-1', 'high-low-2', 'high-low-3']]
 
-        split = int(0.7*len(df))
+        split = int(0.6*len(df))
         # Train data set
         X_train = X[:split]
         y_train = y[:split]
@@ -86,37 +86,41 @@ class SVMModelTrainer(object):
         y_pred = model.predict(X_test)
         print("Test accuracy: ", accuracy_score(y_test, y_pred))
 
-        # Calculate daily returns
-        df['return'] = np.log(df.close.div(df.close.shift(1)))
-
-        # Calculate strategy returns
-        df['strategy_return'] = df['return'] * df.predicted_signal.shift(1)
-
-        df["cum_ret"] = df["return"].cumsum().apply(np.exp)
-        df["cum_strategy"] = df["strategy_return"].cumsum().apply(np.exp)
-
         cash = 100_000
 
         df['Open'] = df.open
         df['Close'] = df.close
         df['High'] = df.high
         df['Low'] = df.low
-        MyBacktest().test(df, cash)
-        bt = Backtest(df, SVMStrategy, cash=cash, commission=0.0002,
+
+        bt_df = df.iloc[split:].copy()
+        buy_pred_fn = lambda row: row.predicted_signal == 1
+        sell_pred_fn = lambda row: row.predicted_signal == -1
+        MyBacktest().test(bt_df, cash, buy_pred_fn, sell_pred_fn)
+        bt = Backtest(bt_df, SVMStrategy, cash=cash, commission=0.0002,
                       exclusive_orders=True)
         stat = bt.run()
         print(stat)
 
+        # Calculate daily returns
+        bt_df['return'] = np.log(bt_df.close.div(bt_df.close.shift(1)))
+
+        # Calculate strategy returns
+        bt_df['strategy_return'] = bt_df['return'] * bt_df.predicted_signal.shift(1)
+
+        bt_df["cum_ret"] = bt_df["return"].cumsum().apply(np.exp)
+        bt_df["cum_strategy"] = bt_df["strategy_return"].cumsum().apply(np.exp)        
+
         def plotFn():
             fig = make_subplots(rows=1, cols=1, shared_xaxes=True)
             fig.add_trace(go.Scatter(
-                x=df.index,
-                y=df['cum_ret'],
+                x=bt_df.index,
+                y=bt_df['cum_ret'],
                 line=dict(color='red', width=2),
                 showlegend=False), row=1, col=1)
             fig.add_trace(go.Scatter(
-                x=df.index,
-                y=df['cum_strategy'],
+                x=bt_df.index,
+                y=bt_df['cum_strategy'],
                 line=dict(color='blue', width=2),
                 showlegend=False), row=1, col=1)
 
