@@ -4,6 +4,8 @@ from ibapi.contract import Contract
 from place_order.ibkr_place_order import IBKRPlaceOrder
 
 import oandapyV20
+from oandapyV20.types import DateTime
+from datetime import datetime, timedelta, timezone
 
 from place_order.oanda_place_order import OANDAPlaceOrder
 
@@ -61,14 +63,14 @@ class Trader:
         ########################### OANDA PLACE ORDER #################################
         instrument = contract.symbol + "_" + contract.currency
 
-        instrument_position = self.oanda_positions[0][instrument]
+        instrument_position = self.oanda_positions[0].get(instrument)
         if instrument_position is not None:
             long = instrument_position['long']
             short = instrument_position['short']
-            if long['units'] != 0:
+            if int(long['units']) != 0:
                 print("LONG POSITION ALREADY EXIST. PASS THIS ONE")
                 return
-            if short['units'] != 0:
+            if int(short['units']) != 0:
                 print("THERE IS AN EXISTING SHORT POSITION. NEED TO CLOSE THIS ONE")
                 import oandapyV20.endpoints.positions as positions
                 import os
@@ -87,7 +89,9 @@ class Trader:
             order='BUY',
             symbol=instrument,
             limit_price=limit_price,
-            time_in_force='GTC',
+            # time_in_force='GTC',
+            time_in_force='GTD',
+            gtd_time = DateTime(dateTime=(datetime.now(tz=timezone.utc) + timedelta(minutes=13))).value,
             risk=max_loss,
             stop_loss=stop_loss,
             target_profit=target_profit
@@ -120,14 +124,14 @@ class Trader:
 
         ########################### OANDA PLACE ORDER #################################
         instrument = contract.symbol + "_" + contract.currency
-        instrument_position = self.oanda_positions[0][instrument]
+        instrument_position = self.oanda_positions[0].get(instrument)
         if instrument_position is not None:
             long = instrument_position['long']
             short = instrument_position['short']
-            if short['units'] != 0:
+            if int(short['units']) != 0:
                 print("SHORT POSITION ALREADY EXIST. PASS THIS ONE")
                 return
-            if long['units'] != 0:
+            if int(long['units']) != 0:
                 print("THERE IS AN EXISTING LONG POSITION. NEED TO CLOSE THIS ONE")
                 import oandapyV20.endpoints.positions as positions
                 import os
@@ -145,7 +149,9 @@ class Trader:
             order='SELL',
             symbol=instrument,
             limit_price=limit_price,
-            time_in_force='GTC',
+            # time_in_force='GTC',
+            time_in_force='GTD',
+            gtd_time = DateTime(dateTime=(datetime.now(tz=timezone.utc) + timedelta(minutes=13))).value,
             risk=max_loss,
             stop_loss=stop_loss,
             target_profit=target_profit
