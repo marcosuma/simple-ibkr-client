@@ -1,5 +1,10 @@
 import numpy as np
-from marsi_strategy.tester import Tester
+from backtesting import Backtest
+
+from marsi_strategy.backtesting.Backtesting import BacktestingStrategy
+from tester.tester import Tester as MyBacktest
+
+import plotly.graph_objects as go
 
 
 class MARSIStrategy(object):
@@ -21,12 +26,55 @@ class MARSIStrategy(object):
         df['macd_sell_signal'] = np.sign(df['macd_trend']).diff().lt(0)
 
         df['execute_buy'] = np.where(
-            df['macd_buy_signal'] & df['RSI_30_ok'], df['close'] + df['STDEV_30'], "NaN")
+            df['macd_buy_signal'] & df['RSI_30_ok'], df['close'] + df['STDEV_30'], np.NaN)
         df['execute_sell'] = np.where(
-            df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - df['STDEV_30'], "NaN")
+            df['macd_sell_signal'] & df['RSI_70_ok'], df['close'] - df['STDEV_30'], np.NaN)
 
-        profits, buydates, selldates, buyprices, sellprices, long_short = Tester(
-        ).test_with_sl_and_pt(df)
+        cash = 5_000
+        def buy_pred_fn(row): return row.execute_buy != np.NaN
+        def sell_pred_fn(row): return row.execute_sell != np.NaN
+        MyBacktest().test(df, cash, buy_pred_fn, sell_pred_fn)
 
-        # for x in zip(profits, buydates, selldates, buyprices, sellprices, long_short):
-        #     print(x)
+        df['Open'] = df.open
+        df['Close'] = df.close
+        df['High'] = df.high
+        df['Low'] = df.low
+        bt = Backtest(df, BacktestingStrategy, cash=cash, commission=0.0002,
+                      exclusive_orders=True)
+        stat = bt.run()
+        print(stat)
+
+        def printStrategyMarkersFn(fig):
+            pass
+            fig.append_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df['execute_buy'],
+                    name='Buy Action',
+                    # showlegend=False,
+                    legendgroup='2',
+                    mode="markers",
+                    marker=dict(
+                        color='green',
+                        line=dict(color='green', width=2),
+                        symbol='triangle-down',
+                    ),
+                ), row=1, col=1
+            )
+            fig.append_trace(
+                go.Scatter(
+                    x=df.index,
+                    y=df['execute_sell'],
+                    name='Sell Action',
+                    # showlegend=False,
+                    legendgroup='2',
+                    mode="markers",
+                    marker=dict(
+                        color='red',
+                        line=dict(color='red', width=2),
+                        symbol='triangle-up',
+                    ),
+                ), row=1, col=1
+            )
+
+        return printStrategyMarkersFn
