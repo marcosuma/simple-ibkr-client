@@ -7,7 +7,7 @@ from sklearn.metrics import accuracy_score
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-from machine_learning.tester import Tester as MyBacktest
+from tester.tester import Tester as MyBacktest
 
 import os
 import pickle
