@@ -24,8 +24,8 @@ class Tester(object):
                     in_position = True
                     is_long = True
                     long_short.append("Long")
-                    sl = row.open - 2 * row.open_std
-                    tp = row.open + 10 * row.open_std
+                    sl = row.open - 5 * row.STDEV_30
+                    tp = row.open + 10 * row.STDEV_30
                     # print('stop loss: ' + str(sl) +
                     #       ' target profit: ' + str(tp))
                     continue
@@ -36,32 +36,38 @@ class Tester(object):
                     in_position = True
                     is_long = False
                     long_short.append("Short")
-                    tp = row.open - 10 * row.open_std
-                    sl = row.open + 2 * row.open_std
+                    tp = row.open - 10 * row.STDEV_30
+                    sl = row.open + 5 * row.STDEV_30
                     # print('stop loss: ' + str(sl) +
                     #       ' target profit: ' + str(tp))
                     continue
                 if in_position:
                     if is_long:
                         if row.low < buyprice * sl:
-                            sellprice = row.low
+                            sellprice = buyprice * sl
                             sellprices.append(sellprice)
                             selldates.append(index)
                         elif row.high > buyprice * tp:
-                            sellprice = row.high
+                            is_long = None
+                            in_position = False
+                            sellprice = buyprice * tp
                             sellprices.append(sellprice)
                             selldates.append(index)
+                            is_long = None
+                            in_position = False
                     else:
-                        if row.low < sellprice * sl:
-                            buyprice = row.low
+                        if row.high > sellprice * sl:
+                            buyprice = sellprice * sl
                             buyprices.append(buyprice)
                             buydates.append(index)
-                        elif row.high > sellprice * tp:
-                            buyprice = row.high
+                            is_long = None
+                            in_position = False
+                        elif row.low < sellprice * tp:
+                            buyprice = sellprice * tp
                             buyprices.append(buyprice)
                             buydates.append(index)
-                    is_long = None
-                    in_position = False
+                            is_long = None
+                            in_position = False
 
             profits = pd.Series(
                 # 0.0015 is a fictitious fee
