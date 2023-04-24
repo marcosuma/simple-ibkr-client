@@ -80,7 +80,7 @@ if __name__ == "__main__":
 
     callbackFnMap = defaultdict(lambda: defaultdict(lambda: None))
     client = IBApiClient(callbackFnMap)
-    client.connect('127.0.0.1', 7497, 123)
+    # client.connect('127.0.0.1', 7497, 123)
 
     # Start the socket in a thread
     api_thread = threading.Thread(target=run_loop, daemon=True)
@@ -93,13 +93,13 @@ if __name__ == "__main__":
 
     # time.sleep(1)  # Sleep interval to allow time for connection to server
 
-    while True:
-        if isinstance(client.nextorderId, int):
-            print("connected")
-            break
-        else:
-            print("Waiting for connection to server")
-            time.sleep(1)
+    # while True:
+    #     if isinstance(client.nextorderId, int):
+    #         print("connected")
+    #         break
+    #     else:
+    #         print("Waiting for connection to server")
+    #         time.sleep(1)
 
 ########################### REQUEST MARKED DATA #################################
     # app.reqMarketDataType(MarketDataTypeEnum.REALTIME)
@@ -130,8 +130,8 @@ if __name__ == "__main__":
     contract.secType = 'CASH'
     contract.exchange = 'IDEALPRO'
     contract.currency = 'USD'
-    rhd_object = rhd.RequestHistoricalData(client, callbackFnMap)
-    rhd_cb = rhd_callback.Callback(candlestick_data)
+    # rhd_object = rhd.RequestHistoricalData(client, callbackFnMap)
+    # rhd_cb = rhd_callback.Callback(candlestick_data)
     interval = '2 Y'
     timePeriod = '15 mins'
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
@@ -167,14 +167,14 @@ if __name__ == "__main__":
         # rhd_object.request_historical_data(
         #     reqID=client.nextorderId, contract=contract, interval="1 D", timePeriod="15 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
-    import os
-    if not os.path.exists(file_to_save):
-        rhd_object.request_historical_data(
-            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
-    else:
-        print('File already exists. Loading data from CSV')
-        df = pd.read_csv(file_to_save, index_col=[0])
-        combine_fn_file(df)
+    # import os
+    # if not os.path.exists(file_to_save):
+        # rhd_object.request_historical_data(
+        #     reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
+    # else:
+    print('File already exists. Loading data from CSV')
+    df = pd.read_csv(file_to_save, index_col=[0])
+    combine_fn_file(df)
 ########################### REQUEST HISTORICAL DATA #################################
 
     while True:
