@@ -8,7 +8,7 @@ class Plot(object):
         self.df = df
         self.plotsQueue = plotsQueue
 
-    def plot(self):
+    def plot(self, printStrategyMarkersFn):
         df = self.df
         plotsQueue = self.plotsQueue
         def plotFn():
@@ -27,36 +27,9 @@ class Plot(object):
                     showlegend=False
                 ), row=1, col=1
             )
-            # fig.append_trace(
-            #     go.Scatter(
-            #         x=df.index,
-            #         y=df['execute_buy'],
-            #         name='Buy Action',
-            #         # showlegend=False,
-            #         legendgroup='2',
-            #         mode="markers",
-            #         marker=dict(
-            #             color='green',
-            #             line=dict(color='green', width=2),
-            #             symbol='triangle-down',
-            #         ),
-            #     ), row=1, col=1
-            # )
-            # fig.append_trace(
-            #     go.Scatter(
-            #         x=df.index,
-            #         y=df['execute_sell'],
-            #         name='Sell Action',
-            #         # showlegend=False,
-            #         legendgroup='2',
-            #         mode="markers",
-            #         marker=dict(
-            #             color='red',
-            #             line=dict(color='red', width=2),
-            #             symbol='triangle-up',
-            #         ),
-            #     ), row=1, col=1
-            # )
+            
+            printStrategyMarkersFn(fig)
+            
             # # EMA 10
             # fig.append_trace(
             #     go.Scatter(
