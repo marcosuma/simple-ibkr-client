@@ -151,9 +151,10 @@ if __name__ == "__main__":
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
-        RSIStrategy().execute(df)
+        printStrategyMarkersFn = RSIStrategy().execute(df)
+        # printStrategyMarkersFn = MARSIStrategy().execute(df)
         # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
-        Plot(df, plots_queue).plot()
+        Plot(df, plots_queue).plot(printStrategyMarkersFn)
         # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
         # df, model = SVMModelTrainer(
         #     plots_queue, file_to_save).process_data_with_file(df)
