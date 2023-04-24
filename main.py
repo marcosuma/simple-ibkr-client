@@ -4,6 +4,7 @@
 import oandapyV20
 import oandapyV20.endpoints.positions as oanda_positions_api
 import oandapyV20.endpoints.accounts as oanda_accounts_api
+from rsi_strategy.rsi_strategy import RSIStrategy
 from trader.trader import Trader
 from svm_strategy.svm_strategy import SVMStrategy
 from marsi_strategy.marsi_strategy import MARSIStrategy
@@ -16,12 +17,14 @@ from ib_api_client.ib_api_client import IBApiClient
 from ibapi.contract import Contract
 import matplotlib.pyplot as plt
 from plot.plot import Plot
+from support_resistance.support_resistance import SupportResistance
 
 import threading
 import collections
 
 from technical_indicators.technical_indicators import TechnicalIndicators
 from machine_learning.svm_model_trainer import SVMModelTrainer
+from machine_learning.lstm_model_trainer import LSTMModelTrainer
 
 from dotenv import load_dotenv
 import os
@@ -41,7 +44,7 @@ oanda_account_summary_queue = []
 def updateOpenPosition():
     while True:
         accountID = os.environ.get('OANDA_ACCOUNT_ID')
-        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN'))
+        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment="live"
         r = oanda_positions_api.OpenPositions(accountID=accountID)
         client.request(r)
         oanda_positions_queue.pop() if len(oanda_positions_queue) > 0 else None
@@ -56,7 +59,7 @@ def updateOpenPosition():
 def updateAccountSummary():
     while True:
         accountID = os.environ.get('OANDA_ACCOUNT_ID')
-        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN'))
+        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment="live"
 
         r = oanda_accounts_api.AccountSummary(accountID)
         client.request(r)
@@ -71,7 +74,7 @@ def updateAccountSummary():
 candlestick_data = []
 plots_queue = collections.deque([])
 oanda_client = oandapyV20.API(
-    access_token=os.environ.get('OANDA_ACCESS_TOKEN'), environment='practice')
+    access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment='live'
 
 if __name__ == "__main__":
 
@@ -135,7 +138,7 @@ if __name__ == "__main__":
         contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
     technical_indicators = TechnicalIndicators(
         candlestick_data, file_to_save)
-    budget = 100_000
+    budget = 5_000
     trader = Trader(ibkr_client=client, oanda_client=oanda_client, oanda_positions=oanda_positions_queue, oanda_account_summary=oanda_positions_queue,
                     callbackFnMap=callbackFnMap, budget=budget)
 
@@ -148,16 +151,20 @@ if __name__ == "__main__":
 
     def combine_fn_file(df):
         df = technical_indicators.process_data_with_file(df)
-        df, model = SVMModelTrainer(
-            plots_queue, file_to_save).process_data_with_file(df)
+        RSIStrategy().execute(df)
+        # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
+        Plot(df, plots_queue).plot()
+        # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
+        # df, model = SVMModelTrainer(
+        #     plots_queue, file_to_save).process_data_with_file(df)
 
         # Request new historical data in "live" mode so that actions can be taken on the market
-        strategy = SVMStrategy(df, model, file_to_save,
-                               client, contract, trader)
+        # strategy = SVMStrategy(df, model, file_to_save,
+        #                        client, contract, trader)
         # The historical data from this call will be simply ignored. We are using it just to get the updates and apply the strategy on them.
-        client.nextorderId += 1
-        rhd_object.request_historical_data(
-            reqID=client.nextorderId, contract=contract, interval="1 D", timePeriod="15 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
+        # client.nextorderId += 1
+        # rhd_object.request_historical_data(
+        #     reqID=client.nextorderId, contract=contract, interval="1 D", timePeriod="15 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
     import os
     if not os.path.exists(file_to_save):
