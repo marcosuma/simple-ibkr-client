@@ -1,10 +1,6 @@
-import numpy as np
-import pandas as pd
-
-
 class Tester(object):
 
-    def test(self, df, balance):
+    def test(self, df, balance, buy_prediction_fn, sell_prediction_fn):
 
         # budget = 100_000
         def test_strategy(df, balance):
@@ -14,7 +10,8 @@ class Tester(object):
             size = 0
             last_value = None
             for index, row in df.iterrows():
-                if row.predicted_signal == 1:
+                # if row.predicted_signal == 1:
+                if buy_prediction_fn(row):
                     if is_long == True:
                         continue
                     if is_short == True:
@@ -28,7 +25,8 @@ class Tester(object):
                     size = balance // row.close
                     balance -= size * row.close
 
-                elif row.predicted_signal == -1:
+                # elif row.predicted_signal == -1:
+                if sell_prediction_fn(row):
                     if is_short == True:
                         continue
                     if is_long == True:
