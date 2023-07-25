@@ -89,7 +89,7 @@ class IBApiClient(EWrapper, EClient):
             execution.lastLiquidity,
         )
 
-    def error(self, reqId, errorCode, errorString, advancedOrderRejectJson):
+    def error(self, reqId, errorCode, errorString, advancedOrderRejectJson=''):
         print(reqId, errorCode, errorString, advancedOrderRejectJson)
         # if errorCode == 202:
         #     print('order canceled')

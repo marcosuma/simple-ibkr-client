@@ -23,7 +23,8 @@ class RequestHistoricalData:
     ):
         self.callbackFnMap[reqID]["historicalData"] = atDatapointFn
         self.callbackFnMap[reqID]["historicalDataEnd"] = afterAllDataFn
-        self.callbackFnMap[reqID]["historicalDataUpdate"] = atDatapointUpdateFn
+        if atDatapointUpdateFn is not None:
+            self.callbackFnMap[reqID]["historicalDataUpdate"] = atDatapointUpdateFn
         # https://interactivebrokers.github.io/tws-api/historical_bars.html
         self.app.reqHistoricalData(
             reqID,

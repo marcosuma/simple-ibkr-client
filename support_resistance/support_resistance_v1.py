@@ -80,4 +80,4 @@ class SupportResistanceV1(object):
             for avg in avgs:
                 fig.add_hline(y=avg)
 
-        return printStrategyMarkersFn
+        return printStrategyMarkersFn, avgs
