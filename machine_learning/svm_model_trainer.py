@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+from sklearn.preprocessing import MinMaxScaler
 
 from sklearn.svm import SVC
 from sklearn.metrics import accuracy_score
@@ -58,15 +59,19 @@ class SVMModelTrainer(object):
         # Store all predictor variables in a variable X
         X = df[['open-close', 'high-low', 'RSI_14', 'minus_di',
                 'plus_di', 'adx', 'EMA_delta', 'SMA_200_50', 'open-close-1', 'open-close-2', 'open-close-3', 'high-low-1', 'high-low-2', 'high-low-3']]
+        X = X.to_numpy(dtype='float64')
 
         split = int(0.6*len(df))
+        scaler = MinMaxScaler(feature_range=(-1, 1))
         # Train data set
         X_train = X[:split]
+        X_train = scaler.fit_transform(X_train.reshape(-1, X_train.shape[-1])).reshape(X_train.shape)
         y_train = y[:split]
 
         # Test data set
-        X_test = X[split:]
-        y_test = y[split:]
+        X_test = X[split:-1]
+        X_test = scaler.fit_transform(X_test.reshape(-1, X_test.shape[-1])).reshape(X_test.shape)
+        y_test = y[split:-1]
 
         model_filename_path = os.path.dirname(
             os.path.abspath(__file__)) + "/models/{}-{}.sav".format(
@@ -78,12 +83,14 @@ class SVMModelTrainer(object):
             # Support vector classifier
             model = SVC(gamma='auto')
             model = model.fit(X_train, y_train)
-            pickle.dump(model, open(model_filename_path, 'wb'))
+            # pickle.dump(model, open(model_filename_path, 'wb'))
 
         df['predicted_signal'] = model.predict(X)
         print("predicted_signal: ", df['predicted_signal'].value_counts())
 
         y_pred = model.predict(X_test)
+        # print(y_pred)
+        # y_pred = scaler.inverse_transform(np.reshape(y_pred, (-1,1)))
         print("Test accuracy: ", accuracy_score(y_test, y_pred))
 
         cash = 100_000
