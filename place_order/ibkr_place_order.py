@@ -29,6 +29,6 @@ class IBKRPlaceOrder:
         order.action = action
         order.totalQuantity = qty
         order.orderType = order_type
-        if limit_price is not None and order_type == 'LMT':
+        if limit_price is not None and order_type == "LMT":
             order.lmtPrice = limit_price
         return order

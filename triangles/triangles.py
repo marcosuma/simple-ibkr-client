@@ -17,8 +17,10 @@ class Triangles:
         self.__fn_impl(df)
 
     def process_data(self, reqId: int, start: str, end: str):
-        df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
-            "date", "open", "close", "high", "low", "volume"])
+        df = pd.DataFrame(
+            data=np.array(self.candlestickData),
+            columns=["date", "open", "close", "high", "low", "volume"],
+        )
         df.to_csv(self.fileToSave)
         print(df)
 
@@ -28,28 +30,59 @@ class Triangles:
         df.reset_index(drop=True, inplace=True)
         df.isna().sum()
 
-        df['pivot'] = df.apply(
-            lambda x: self.__pivotid(df, x.name, 3, 3), axis=1)
-        df['pointpos'] = df.apply(lambda row: self.__pointpos(row), axis=1)
+        df["pivot"] = df.apply(lambda x: self.__pivotid(df, x.name, 3, 3), axis=1)
+        df["pointpos"] = df.apply(lambda row: self.__pointpos(row), axis=1)
 
         backcandles = 100
         dfpl = df
 
-        fig = go.Figure(data=[go.Candlestick(x=dfpl.index, open=dfpl['open'],
-                        high=dfpl['high'], low=dfpl['low'], close=dfpl['close'])])
+        fig = go.Figure(
+            data=[
+                go.Candlestick(
+                    x=dfpl.index,
+                    open=dfpl["open"],
+                    high=dfpl["high"],
+                    low=dfpl["low"],
+                    close=dfpl["close"],
+                )
+            ]
+        )
 
-        fig.add_scatter(x=dfpl.index, y=dfpl['pointpos'], mode="markers", marker=dict(
-            size=4, color="MediumPurple"), name="pivot")
+        fig.add_scatter(
+            x=dfpl.index,
+            y=dfpl["pointpos"],
+            mode="markers",
+            marker=dict(size=4, color="MediumPurple"),
+            name="pivot",
+        )
 
         candleid = backcandles
         while candleid < len(dfpl) - 1:
             try:
-                slmin, intercmin, slmax, intercmax, xxmin, xxmax = self.__check_if_triangle(
-                    candleid, backcandles, df)
-                fig.add_trace(go.Scatter(x=xxmin, y=slmin*xxmin +
-                                         intercmin, mode='lines', name='min slope'))
-                fig.add_trace(go.Scatter(x=xxmax, y=slmax*xxmax +
-                                         intercmax, mode='lines', name='max slope'))
+                (
+                    slmin,
+                    intercmin,
+                    slmax,
+                    intercmax,
+                    xxmin,
+                    xxmax,
+                ) = self.__check_if_triangle(candleid, backcandles, df)
+                fig.add_trace(
+                    go.Scatter(
+                        x=xxmin,
+                        y=slmin * xxmin + intercmin,
+                        mode="lines",
+                        name="min slope",
+                    )
+                )
+                fig.add_trace(
+                    go.Scatter(
+                        x=xxmax,
+                        y=slmax * xxmax + intercmax,
+                        mode="lines",
+                        name="max slope",
+                    )
+                )
                 fig.update_layout(xaxis_rangeslider_visible=False)
                 candleid += int(backcandles * 0.5)
             except ValueError as err:
@@ -76,12 +109,12 @@ class Triangles:
         # plotsQueue.append(plotFn)
 
     def __pivotid(self, df1, l, n1, n2):  # n1 n2 before and after candle l
-        if l-n1 < 0 or l+n2 >= len(df1):
+        if l - n1 < 0 or l + n2 >= len(df1):
             return 0
 
         pividlow = 1
         pividhigh = 1
-        for i in range(l-n1, l+n2+1):
+        for i in range(l - n1, l + n2 + 1):
             if df1.low[l] > df1.low[i]:
                 pividlow = 0
             if df1.high[l] < df1.high[i]:
@@ -97,10 +130,10 @@ class Triangles:
             return 0
 
     def __pointpos(self, x):
-        if x['pivot'] == 1:
-            return float(x['low']) - 1e-5
-        elif x['pivot'] == 2:
-            return float(x['high']) + 1e-5
+        if x["pivot"] == 1:
+            return float(x["low"]) - 1e-5
+        elif x["pivot"] == 2:
+            return float(x["high"]) + 1e-5
         else:
             return np.nan
 
@@ -120,7 +153,8 @@ class Triangles:
 
         if (xxmax.size < 5 and xxmin.size < 5) or xxmax.size == 0 or xxmin.size == 0:
             raise ValueError(
-                "no triangle found - ((xxmax.size < 3 and xxmin.size < 3) or xxmax.size == 0 or xxmin.size == 0)")
+                "no triangle found - ((xxmax.size < 3 and xxmin.size < 3) or xxmax.size == 0 or xxmin.size == 0)"
+            )
 
         slmin, intercmin, rmin, pmin, semin = linregress(xxmin, minim)
         slmax, intercmax, rmax, pmax, semax = linregress(xxmax, maxim)

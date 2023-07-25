@@ -1,7 +1,7 @@
 from ibapi.ticktype import TickTypeEnum
 
 
-class Callback():
+class Callback:
     def __init__(self, askPriceMap, bidPriceMap):
         self.bidPriceMap = bidPriceMap
         self.askPriceMap = askPriceMap

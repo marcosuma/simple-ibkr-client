@@ -23,8 +23,10 @@ class TechnicalIndicators(object):
         return df
 
     def process_data(self, reqId: int, start: str, end: str):
-        df = pd.DataFrame(data=np.array(self.candlestickData), columns=[
-            "date", "open", "close", "high", "low", "volume"])
+        df = pd.DataFrame(
+            data=np.array(self.candlestickData),
+            columns=["date", "open", "close", "high", "low", "volume"],
+        )
         df["date"] = df["date"].astype(int)
         df["close"] = df["close"].astype(float)
         df["open"] = df["open"].astype(float)
@@ -36,7 +38,7 @@ class TechnicalIndicators(object):
         return df
 
     def __fn_impl(self, df: pd.DataFrame):
-        df['shifted_open'] = df.open.shift(-1)
+        df["shifted_open"] = df.open.shift(-1)
 
         SMA().calculate(df)
         EMA().calculate(df)

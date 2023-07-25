@@ -1,5 +1,4 @@
 class Tester(object):
-
     def test(self, df, balance, buy_prediction_fn, sell_prediction_fn):
 
         # budget = 100_000

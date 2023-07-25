@@ -1,7 +1,7 @@
 from ibapi.ticktype import TickTypeEnum
 
 
-class Callback():
+class Callback:
     def __init__(self, candlestickData):
         self.candlestickData = candlestickData
 
@@ -31,4 +31,12 @@ class Callback():
 
     def _handleBase(self, reqId, bar):
         self.candlestickData.append(
-            [str(bar.date), float(bar.open), float(bar.close), float(bar.high), float(bar.low), float(bar.volume)])
+            [
+                str(bar.date),
+                float(bar.open),
+                float(bar.close),
+                float(bar.high),
+                float(bar.low),
+                float(bar.volume),
+            ]
+        )

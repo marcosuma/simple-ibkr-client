@@ -32,52 +32,63 @@ from machine_learning.lstm_model_trainer import LSTMModelTrainer
 from dotenv import load_dotenv
 import os
 
-load_dotenv('.env')
+load_dotenv(".env")
 
 
 # matplotlib.use("MacOSX")
-plt.style.use('fivethirtyeight')
+plt.style.use("fivethirtyeight")
 
 
 def run_loop():
     client.run()
 
+
 oanda_positions_queue = []
 oanda_account_summary_queue = []
+
+
 def updateOpenPosition():
     while True:
-        accountID = os.environ.get('OANDA_ACCOUNT_ID')
-        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment="live"
+        accountID = os.environ.get("OANDA_ACCOUNT_ID")
+        client = oandapyV20.API(
+            access_token=os.environ.get("OANDA_ACCESS_TOKEN")
+        )  # , environment="live"
         r = oanda_positions_api.OpenPositions(accountID=accountID)
         client.request(r)
         oanda_positions_queue.pop() if len(oanda_positions_queue) > 0 else None
         oanda_positions = {}
-        positions = r.response['positions']
+        positions = r.response["positions"]
         for position in positions:
-            instrument = position['instrument']
+            instrument = position["instrument"]
             oanda_positions[instrument] = position
         oanda_positions_queue.append(oanda_positions)
         # print(oanda_positions_queue)
         time.sleep(10)
+
+
 def updateAccountSummary():
     while True:
-        accountID = os.environ.get('OANDA_ACCOUNT_ID')
-        client = oandapyV20.API(access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment="live"
+        accountID = os.environ.get("OANDA_ACCOUNT_ID")
+        client = oandapyV20.API(
+            access_token=os.environ.get("OANDA_ACCESS_TOKEN")
+        )  # , environment="live"
 
         r = oanda_accounts_api.AccountSummary(accountID)
         client.request(r)
-        oanda_account_summary_queue.pop() if len(oanda_account_summary_queue) > 0 else None
-        oanda_account_summary = r.response['account']
+        oanda_account_summary_queue.pop() if len(
+            oanda_account_summary_queue
+        ) > 0 else None
+        oanda_account_summary = r.response["account"]
         oanda_account_summary_queue.append(oanda_account_summary)
         # print(oanda_account_summary_queue)
         time.sleep(10)
 
 
-
 candlestick_data = []
 plots_queue = collections.deque([])
 oanda_client = oandapyV20.API(
-    access_token=os.environ.get('OANDA_ACCESS_TOKEN')) #, environment='live'
+    access_token=os.environ.get("OANDA_ACCESS_TOKEN")
+)  # , environment='live'
 
 if __name__ == "__main__":
 
@@ -104,7 +115,7 @@ if __name__ == "__main__":
     #         print("Waiting for connection to server")
     #         time.sleep(1)
 
-########################### REQUEST MARKED DATA #################################
+    ########################### REQUEST MARKED DATA #################################
     # app.reqMarketDataType(MarketDataTypeEnum.REALTIME)
     # app.reqMarketDataType(MarketDataTypeEnum.DELAYED)
 
@@ -124,31 +135,41 @@ if __name__ == "__main__":
     # rmd_object.request_market_data(id, contract, , handleDataAlibaba)
     # request_market_data.request_markeczt_data(bitcoin_futures_id, bitcoin_futures_contract, handleDataBitcoinFutures)
     # request_market_data.request_market_data(eur_usd_id, eur_usd_contract, handleDataEurUsd)
-########################### REQUEST MARKED DATA #################################
+    ########################### REQUEST MARKED DATA #################################
 
-########################### REQUEST HISTORICAL DATA #################################
+    ########################### REQUEST HISTORICAL DATA #################################
     id = client.nextorderId
     contract = Contract()
-    contract.symbol = 'GBP'
-    contract.secType = 'CASH'
-    contract.exchange = 'IDEALPRO'
-    contract.currency = 'USD'
+    contract.symbol = "GBP"
+    contract.secType = "CASH"
+    contract.exchange = "IDEALPRO"
+    contract.currency = "USD"
     # rhd_object = rhd.RequestHistoricalData(client, callbackFnMap)
     # rhd_cb = rhd_callback.Callback(candlestick_data)
-    interval = '2 Y'
-    timePeriod = '15 mins'
+    interval = "2 Y"
+    timePeriod = "15 mins"
     file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
-        contract.symbol, contract.secType, contract.exchange, contract.currency, interval, timePeriod)
-    technical_indicators = TechnicalIndicators(
-        candlestick_data, file_to_save)
+        contract.symbol,
+        contract.secType,
+        contract.exchange,
+        contract.currency,
+        interval,
+        timePeriod,
+    )
+    technical_indicators = TechnicalIndicators(candlestick_data, file_to_save)
     budget = 5_000
-    trader = Trader(ibkr_client=client, oanda_client=oanda_client, oanda_positions=oanda_positions_queue, oanda_account_summary=oanda_positions_queue,
-                    callbackFnMap=callbackFnMap, budget=budget)
+    trader = Trader(
+        ibkr_client=client,
+        oanda_client=oanda_client,
+        oanda_positions=oanda_positions_queue,
+        oanda_account_summary=oanda_positions_queue,
+        callbackFnMap=callbackFnMap,
+        budget=budget,
+    )
 
     def combine_fn(reqId, start, end):
         df = technical_indicators.process_data(reqId, start, end)
-        df, _ = SVMModelTrainer(
-            plots_queue, file_to_save).process_data_with_file(df)
+        df, _ = SVMModelTrainer(plots_queue, file_to_save).process_data_with_file(df)
         MARSIStrategy().execute(df)
         Plot(df, plots_queue).plot()
 
@@ -162,7 +183,7 @@ if __name__ == "__main__":
         # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
         Plot(df, plots_queue).plot(printStrategyMarkersFn)
         # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
-        
+
         # df, model = SVMModelTrainer(
         #     plots_queue, file_to_save).process_data_with_file(df)
 
@@ -176,13 +197,13 @@ if __name__ == "__main__":
 
     # import os
     # if not os.path.exists(file_to_save):
-        # rhd_object.request_historical_data(
-        #     reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
+    # rhd_object.request_historical_data(
+    #     reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
     # else:
-    print('File already exists. Loading data from CSV')
+    print("File already exists. Loading data from CSV")
     df = pd.read_csv(file_to_save, index_col=[0])
     combine_fn_file(df)
-########################### REQUEST HISTORICAL DATA #################################
+    ########################### REQUEST HISTORICAL DATA #################################
 
     while True:
         # manage plots
