@@ -1,3 +1,4 @@
+import math
 import numpy as np
 import pandas as pd
 
@@ -6,6 +7,19 @@ import matplotlib.pyplot as plt
 from scipy.signal import argrelextrema
 import plotly.graph_objects as go
 from sklearn.cluster import KMeans
+
+colors = [
+    "#fff100",
+    "#ff8c00",
+    "#e81123",
+    "#ec008c",
+    "#68217a",
+    "#00188f",
+    "#00bcf2",
+    "#00b294",
+    "#009e49",
+    "#bad80a",
+]
 
 
 class SupportResistanceV1(object):
@@ -21,7 +35,7 @@ class SupportResistanceV1(object):
 
     def __cluster_values(self, values):
         K = 10
-        kmeans = KMeans(n_clusters=K).fit(values.reshape(-1, 1))
+        kmeans = KMeans(n_clusters=K, n_init=10).fit(values.reshape(-1, 1))
 
         # predict which cluster each price is in
         clusters = kmeans.predict(values.reshape(-1, 1))
@@ -36,66 +50,35 @@ class SupportResistanceV1(object):
             argrelextrema(df["close"].values, np.greater_equal, order=n)[0]
         ]["close"]
 
-        # _df = df.copy()
-        # _df.dropna(inplace=True)
-        # print("min values", df["min"])
-        # print(df["min"].describe())
         min_values = df["min"]
         max_values = df["max"]
         min_values.dropna(inplace=True)
         max_values.dropna(inplace=True)
-        min_values = np.array(min_values)
-        max_values = np.array(max_values)
+        min_max_values = min_values.combine(
+            max_values, lambda x, y: x if not math.isnan(x) else y
+        )
 
-        min_clusters = self.__cluster_values(min_values)
-        max_clusters = self.__cluster_values(max_values)
-
-        print(min_clusters)
-        print(max_clusters)
+        clusters = self.__cluster_values(np.array(min_max_values))
+        min_max_values = pd.DataFrame({"values": min_max_values})
+        min_max_values["cluster"] = clusters.tolist()
+        min_max_values["color"] = min_max_values.apply(
+            lambda row: colors[int(row.cluster)], axis=1
+        )
 
         def printStrategyMarkersFn(fig):
             pass
             fig.append_trace(
                 go.Scatter(
-                    x=df.index,
-                    y=df["min"] - 0.01,
+                    x=min_max_values.index,
+                    y=min_max_values["values"],
                     name="Buy Action",
-                    # showlegend=False,
                     legendgroup="2",
                     mode="markers",
-                    marker=dict(
-                        color="blue",
-                        line=dict(color="blue", width=2),
-                        symbol="triangle-down",
-                    ),
+                    marker_color=min_max_values["color"],
+                    text=min_max_values["cluster"],
                 ),
                 row=1,
                 col=1,
             )
-            fig.append_trace(
-                go.Scatter(
-                    x=df.index,
-                    y=df["max"] + 0.01,
-                    name="Sell Action",
-                    # showlegend=False,
-                    legendgroup="2",
-                    mode="markers",
-                    marker=dict(
-                        color="blue",
-                        line=dict(color="blue", width=2),
-                        symbol="triangle-up",
-                    ),
-                ),
-                row=1,
-                col=1,
-            )
-
-        # def plotFn():
-        #     plt.scatter(df.index, df['min'], c='r')
-        #     plt.scatter(df.index, df['max'], c='g')
-        #     plt.plot(df.index, df['close'])
-        #     plt.show()
-
-        # self.plotsQueue.append(plotFn)
 
         return printStrategyMarkersFn
