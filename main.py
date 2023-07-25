@@ -5,7 +5,9 @@ import oandapyV20
 import oandapyV20.endpoints.positions as oanda_positions_api
 import oandapyV20.endpoints.accounts as oanda_accounts_api
 from hammer_shooting_star.hammer_shooting_star import HammerShootingStar
+from patterns.patterns import Patterns
 from rsi_strategy.rsi_strategy import RSIStrategy
+from support_resistance.support_resistance_v1 import SupportResistanceV1
 from trader.trader import Trader
 from svm_strategy.svm_strategy import SVMStrategy
 from marsi_strategy.marsi_strategy import MARSIStrategy
@@ -155,11 +157,14 @@ if __name__ == "__main__":
         # _ = RSIStrategy().execute(df)
         # printStrategyMarkersFn = HammerShootingStar().execute(df)
         # printStrategyMarkersFn = MARSIStrategy().execute(df)
+        srv1 = SupportResistanceV1(plots_queue, file_to_save)
+        printStrategyMarkersFn = srv1.execute(df)
         # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
-        # Plot(df, plots_queue).plot(printStrategyMarkersFn)
+        Plot(df, plots_queue).plot(printStrategyMarkersFn)
         # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
-        df, model = SVMModelTrainer(
-            plots_queue, file_to_save).process_data_with_file(df)
+        
+        # df, model = SVMModelTrainer(
+        #     plots_queue, file_to_save).process_data_with_file(df)
 
         # Request new historical data in "live" mode so that actions can be taken on the market
         # strategy = SVMStrategy(df, model, file_to_save,
