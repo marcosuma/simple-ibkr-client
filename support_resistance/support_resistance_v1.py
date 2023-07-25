@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 
 from scipy.signal import argrelextrema
 import plotly.graph_objects as go
+from sklearn.cluster import KMeans
 
 
 class SupportResistanceV1(object):
@@ -18,6 +19,14 @@ class SupportResistanceV1(object):
         # df.to_csv(self.fileToSave)
         return df
 
+    def __cluster_values(self, values):
+        K = 10
+        kmeans = KMeans(n_clusters=K).fit(values.reshape(-1, 1))
+
+        # predict which cluster each price is in
+        clusters = kmeans.predict(values.reshape(-1, 1))
+        return clusters
+
     def __fn_impl(self, df: pd.DataFrame):
         n = 200  # number of points to be checked before and after
         df["min"] = df.iloc[
@@ -26,6 +35,23 @@ class SupportResistanceV1(object):
         df["max"] = df.iloc[
             argrelextrema(df["close"].values, np.greater_equal, order=n)[0]
         ]["close"]
+
+        # _df = df.copy()
+        # _df.dropna(inplace=True)
+        # print("min values", df["min"])
+        # print(df["min"].describe())
+        min_values = df["min"]
+        max_values = df["max"]
+        min_values.dropna(inplace=True)
+        max_values.dropna(inplace=True)
+        min_values = np.array(min_values)
+        max_values = np.array(max_values)
+
+        min_clusters = self.__cluster_values(min_values)
+        max_clusters = self.__cluster_values(max_values)
+
+        print(min_clusters)
+        print(max_clusters)
 
         def printStrategyMarkersFn(fig):
             pass
