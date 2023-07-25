@@ -1,4 +1,6 @@
+import collections
 import math
+import statistics
 import numpy as np
 import pandas as pd
 
@@ -34,8 +36,8 @@ class SupportResistanceV1(object):
         return df
 
     def __cluster_values(self, values):
-        K = 10
-        kmeans = KMeans(n_clusters=K, n_init=10).fit(values.reshape(-1, 1))
+        K = 6
+        kmeans = KMeans(n_clusters=K, n_init=K).fit(values.reshape(-1, 1))
 
         # predict which cluster each price is in
         clusters = kmeans.predict(values.reshape(-1, 1))
@@ -54,31 +56,28 @@ class SupportResistanceV1(object):
         max_values = df["max"]
         min_values.dropna(inplace=True)
         max_values.dropna(inplace=True)
-        min_max_values = min_values.combine(
+        min_max = min_values.combine(
             max_values, lambda x, y: x if not math.isnan(x) else y
         )
 
-        clusters = self.__cluster_values(np.array(min_max_values))
-        min_max_values = pd.DataFrame({"values": min_max_values})
+        clusters = self.__cluster_values(np.array(min_max))
+        min_max_values = pd.DataFrame({"values": min_max})
         min_max_values["cluster"] = clusters.tolist()
         min_max_values["color"] = min_max_values.apply(
             lambda row: colors[int(row.cluster)], axis=1
         )
 
+        values_by_cluster = collections.defaultdict(lambda: [])
+        for i, cluster in enumerate(clusters):
+            values_by_cluster[cluster].append(min_max.tolist()[i])
+
+        avgs = []
+        for cluster in values_by_cluster:
+            values = values_by_cluster[cluster]
+            avgs.append(statistics.mean(values))
+
         def printStrategyMarkersFn(fig):
-            pass
-            fig.append_trace(
-                go.Scatter(
-                    x=min_max_values.index,
-                    y=min_max_values["values"],
-                    name="Buy Action",
-                    legendgroup="2",
-                    mode="markers",
-                    marker_color=min_max_values["color"],
-                    text=min_max_values["cluster"],
-                ),
-                row=1,
-                col=1,
-            )
+            for avg in avgs:
+                fig.add_hline(y=avg)
 
         return printStrategyMarkersFn
