@@ -4,16 +4,17 @@ from plotly.subplots import make_subplots
 
 
 class Plot(object):
-    def __init__(self, df, plotsQueue):
+    def __init__(self, df, plotsQueue, contract):
         self.df = df
         self.plotsQueue = plotsQueue
+        self.contract = contract
 
     def plot(self, printStrategyMarkersFn):
         df = self.df
         plotsQueue = self.plotsQueue
 
         def plotFn():
-            fig = make_subplots(rows=3, cols=1, shared_xaxes=True)
+            fig = make_subplots(rows=3, cols=1, shared_xaxes=True, subplot_titles=["{}/{}".format(self.contract.symbol, self.contract.currency), "", ""])
             # price Line
             # Candlestick chart for pricing
             fig.append_trace(

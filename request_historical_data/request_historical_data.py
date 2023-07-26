@@ -3,9 +3,10 @@ from ib_api_client.ib_api_client import IBApiClient
 
 
 class RequestHistoricalData:
-    def __init__(self, app: IBApiClient, callbackFnMap):
+    def __init__(self, app: IBApiClient, callbackFnMap, contextMap):
         self.app = app
         self.callbackFnMap = callbackFnMap
+        self.contextMap = contextMap
 
     def request_historical_data(
         self,
@@ -20,11 +21,15 @@ class RequestHistoricalData:
         atDatapointFn,
         afterAllDataFn,
         atDatapointUpdateFn,
+        technicalIndicators,
+        fileToSave,
     ):
         self.callbackFnMap[reqID]["historicalData"] = atDatapointFn
         self.callbackFnMap[reqID]["historicalDataEnd"] = afterAllDataFn
-        if atDatapointUpdateFn is not None:
-            self.callbackFnMap[reqID]["historicalDataUpdate"] = atDatapointUpdateFn
+        self.callbackFnMap[reqID]["historicalDataUpdate"] = atDatapointUpdateFn
+        self.contextMap[reqID]["technicalIndicators"] = technicalIndicators
+        self.contextMap[reqID]["fileToSave"] = fileToSave
+        self.contextMap[reqID]["contract"] = contract
         # https://interactivebrokers.github.io/tws-api/historical_bars.html
         self.app.reqHistoricalData(
             reqID,

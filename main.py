@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+import json
+import os
 import oandapyV20
 import oandapyV20.endpoints.positions as oanda_positions_api
 import oandapyV20.endpoints.accounts as oanda_accounts_api
@@ -83,8 +85,6 @@ def updateAccountSummary():
         # print(oanda_account_summary_queue)
         time.sleep(10)
 
-
-candlestick_data = []
 plots_queue = collections.deque([])
 oanda_client = oandapyV20.API(
     access_token=os.environ.get("OANDA_ACCESS_TOKEN")
@@ -93,7 +93,8 @@ oanda_client = oandapyV20.API(
 if __name__ == "__main__":
 
     callbackFnMap = defaultdict(lambda: defaultdict(lambda: None))
-    client = IBApiClient(callbackFnMap)
+    contextMap = defaultdict(lambda: defaultdict(lambda: None))
+    client = IBApiClient(callbackFnMap, contextMap)
     client.connect('127.0.0.1', 7497, 123)
 
     # Start the socket in a thread
@@ -137,46 +138,16 @@ if __name__ == "__main__":
     # request_market_data.request_market_data(eur_usd_id, eur_usd_contract, handleDataEurUsd)
     ########################### REQUEST MARKED DATA #################################
 
-    ########################### REQUEST HISTORICAL DATA #################################
-    id = client.nextorderId
-    contract = Contract()
-    contract.symbol = "CAD"
-    contract.secType = "CASH"
-    contract.exchange = "IDEALPRO"
-    contract.currency = "CHF"
-    rhd_object = rhd.RequestHistoricalData(client, callbackFnMap)
-    rhd_cb = rhd_callback.Callback(candlestick_data)
-    interval = "1 Y"
-    timePeriod = "15 mins"
-    file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
-        contract.symbol,
-        contract.secType,
-        contract.exchange,
-        contract.currency,
-        interval,
-        timePeriod,
-    )
-    technical_indicators = TechnicalIndicators(candlestick_data, file_to_save)
-    budget = 5_000
-    trader = Trader(
-        ibkr_client=client,
-        oanda_client=oanda_client,
-        oanda_positions=oanda_positions_queue,
-        oanda_account_summary=oanda_positions_queue,
-        callbackFnMap=callbackFnMap,
-        budget=budget,
-    )
-
-    def combine_fn(reqId, start, end):
+    def combine_fn(reqId, start, end, technical_indicators, file_to_save, contract):
         df = technical_indicators.process_data(reqId, start, end)
         srv1 = SupportResistanceV1(plots_queue, file_to_save)
         printStrategyMarkersFn, y_lines = srv1.execute(df)
-        Plot(df, plots_queue).plot(printStrategyMarkersFn)
+        Plot(df, plots_queue, contract).plot(printStrategyMarkersFn)
         # df, _ = SVMModelTrainer(plots_queue, file_to_save).process_data_with_file(df)
         # MARSIStrategy().execute(df)
         # Plot(df, plots_queue).plot()
 
-    def combine_fn_file(df):
+    def combine_fn_file(df, technical_indicators, file_to_save, contract):
         df = technical_indicators.process_data_with_file(df)
         # _ = RSIStrategy().execute(df)
         # printStrategyMarkersFn = HammerShootingStar().execute(df)
@@ -184,7 +155,7 @@ if __name__ == "__main__":
         srv1 = SupportResistanceV1(plots_queue, file_to_save)
         printStrategyMarkersFn, y_lines = srv1.execute(df)
         # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
-        Plot(df, plots_queue).plot(printStrategyMarkersFn)
+        Plot(df, plots_queue, contract).plot(printStrategyMarkersFn)
         # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
 
         # df, model = SVMModelTrainer(
@@ -198,14 +169,49 @@ if __name__ == "__main__":
         # rhd_object.request_historical_data(
         #     reqID=client.nextorderId, contract=contract, interval="1 D", timePeriod="15 mins", dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=True, atDatapointFn=lambda x, y: None, afterAllDataFn=lambda reqId, start, end: print("Do nothing", reqId, start, end), atDatapointUpdateFn=strategy.executeTrade)
 
-    import os
-    if not os.path.exists(file_to_save):
-        rhd_object.request_historical_data(
-            reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None)
-    else:
-        print("File already exists. Loading data from CSV")
-        df = pd.read_csv(file_to_save, index_col=[0])
-        combine_fn_file(df)
+    ########################### REQUEST HISTORICAL DATA #################################
+    with open("contracts.json") as f:
+        data = json.load(f)
+        print(data)
+        id = client.nextorderId
+        for _contract in data["contracts"]:
+            candlestick_data = []            
+            contract = Contract()
+            contract.symbol = _contract["symbol"]
+            contract.secType = _contract["secType"]
+            contract.exchange = _contract["exchange"]
+            contract.currency = _contract["currency"]
+            rhd_object = rhd.RequestHistoricalData(client, callbackFnMap, contextMap)
+            rhd_cb = rhd_callback.Callback(candlestick_data)
+            interval = "6 M"
+            timePeriod = "1 hour"
+            file_to_save = "data/data-{}-{}-{}-{}-{}-{}.csv".format(
+                contract.symbol,
+                contract.secType,
+                contract.exchange,
+                contract.currency,
+                interval,
+                timePeriod,
+            )
+            technical_indicators = TechnicalIndicators(candlestick_data, file_to_save)
+            # budget = 5_000
+            # trader = Trader(
+            #     ibkr_client=client,
+            #     oanda_client=oanda_client,
+            #     oanda_positions=oanda_positions_queue,
+            #     oanda_account_summary=oanda_positions_queue,
+            #     callbackFnMap=callbackFnMap,
+            #     budget=budget,
+            # )    
+            print("Processing contract: ", contract)
+            if not os.path.exists(file_to_save):
+                rhd_object.request_historical_data(
+                    reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None, technicalIndicators=technical_indicators, fileToSave=file_to_save)
+                id += 1
+            else:
+                print("File already exists. Loading data from CSV")
+                df = pd.read_csv(file_to_save, index_col=[0])
+                combine_fn_file(df, technical_indicators, file_to_save, contract)
     ########################### REQUEST HISTORICAL DATA #################################
 
     while True:

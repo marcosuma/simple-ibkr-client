@@ -7,9 +7,10 @@ logger = logging.getLogger(__name__)
 
 
 class IBApiClient(EWrapper, EClient):
-    def __init__(self, callbackFnMap):
+    def __init__(self, callbackFnMap, contextMap):
         EClient.__init__(self, self)
         self.callbackFnMap = callbackFnMap
+        self.contextMap = contextMap
         self.nextorderId = None
         self.orderTypeById = {}
 
@@ -20,7 +21,7 @@ class IBApiClient(EWrapper, EClient):
         self.callbackFnMap[reqId]["historicalData"](reqId, bar)
 
     def historicalDataEnd(self, reqId: int, start: str, end: str):
-        self.callbackFnMap[reqId]["historicalDataEnd"](reqId, start, end)
+        self.callbackFnMap[reqId]["historicalDataEnd"](reqId, start, end, self.contextMap[reqId]["technicalIndicators"], self.contextMap[reqId]["fileToSave"], self.contextMap[reqId]["contract"])
 
     def historicalDataUpdate(self, reqId, bar):
         self.callbackFnMap[reqId]["historicalDataUpdate"](reqId, bar)

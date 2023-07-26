@@ -1,0 +1,40 @@
+{
+    "contracts": [
+      {
+        "symbol": "ETH",
+        "secType": "CRYPTO",
+        "exchange": "PAXOS",
+        "currency": "USD"
+      },
+      {
+        "symbol": "GBP",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "NZD"
+      },
+      {
+        "symbol": "EUR",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "USD"
+      },
+      {
+        "symbol": "GBP",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "USD"
+      },
+      {
+        "symbol": "CAD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "CHF"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "CHF"
+      }
+    ]
+}
