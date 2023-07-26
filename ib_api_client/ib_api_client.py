@@ -2,6 +2,8 @@ import logging
 from ibapi.client import EClient
 from ibapi.ticktype import TickTypeEnum
 from ibapi.wrapper import EWrapper
+import numpy as np
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +23,21 @@ class IBApiClient(EWrapper, EClient):
         self.callbackFnMap[reqId]["historicalData"](reqId, bar)
 
     def historicalDataEnd(self, reqId: int, start: str, end: str):
-        self.callbackFnMap[reqId]["historicalDataEnd"](reqId, start, end, self.contextMap[reqId]["technicalIndicators"], self.contextMap[reqId]["fileToSave"], self.contextMap[reqId]["contract"])
+        candlestick_data = self.contextMap[reqId]["candlestickData"]
+        file_to_save = self.contextMap[reqId]["fileToSave"]
+        df = pd.DataFrame(
+            data=np.array(candlestick_data),
+            columns=["date", "open", "close", "high", "low", "volume"],
+        )
+        df["date"] = df["date"].astype(int)
+        df["close"] = df["close"].astype(float)
+        df["open"] = df["open"].astype(float)
+        df["high"] = df["high"].astype(float)
+        df["low"] = df["low"].astype(float)
+        df.to_csv(file_to_save)
+
+        technical_indicators = self.contextMap[reqId]["technicalIndicators"]
+        self.callbackFnMap[reqId]["historicalDataEnd"](df, technical_indicators, file_to_save, self.contextMap[reqId]["contract"])
 
     def historicalDataUpdate(self, reqId, bar):
         self.callbackFnMap[reqId]["historicalDataUpdate"](reqId, bar)

@@ -23,6 +23,7 @@ class RequestHistoricalData:
         atDatapointUpdateFn,
         technicalIndicators,
         fileToSave,
+        candlestickData
     ):
         self.callbackFnMap[reqID]["historicalData"] = atDatapointFn
         self.callbackFnMap[reqID]["historicalDataEnd"] = afterAllDataFn
@@ -30,6 +31,7 @@ class RequestHistoricalData:
         self.contextMap[reqID]["technicalIndicators"] = technicalIndicators
         self.contextMap[reqID]["fileToSave"] = fileToSave
         self.contextMap[reqID]["contract"] = contract
+        self.contextMap[reqID]["candlestickData"] = candlestickData
         # https://interactivebrokers.github.io/tws-api/historical_bars.html
         self.app.reqHistoricalData(
             reqID,

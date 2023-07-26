@@ -138,17 +138,8 @@ if __name__ == "__main__":
     # request_market_data.request_market_data(eur_usd_id, eur_usd_contract, handleDataEurUsd)
     ########################### REQUEST MARKED DATA #################################
 
-    def combine_fn(reqId, start, end, technical_indicators, file_to_save, contract):
-        df = technical_indicators.process_data(reqId, start, end)
-        srv1 = SupportResistanceV1(plots_queue, file_to_save)
-        printStrategyMarkersFn, y_lines = srv1.execute(df)
-        Plot(df, plots_queue, contract).plot(printStrategyMarkersFn)
-        # df, _ = SVMModelTrainer(plots_queue, file_to_save).process_data_with_file(df)
-        # MARSIStrategy().execute(df)
-        # Plot(df, plots_queue).plot()
-
-    def combine_fn_file(df, technical_indicators, file_to_save, contract):
-        df = technical_indicators.process_data_with_file(df)
+    def process_contract_data(df, technical_indicators, file_to_save, contract):
+        df = technical_indicators.execute(df)
         # _ = RSIStrategy().execute(df)
         # printStrategyMarkersFn = HammerShootingStar().execute(df)
         # printStrategyMarkersFn = MARSIStrategy().execute(df)
@@ -206,12 +197,12 @@ if __name__ == "__main__":
             print("Processing contract: ", contract)
             if not os.path.exists(file_to_save):
                 rhd_object.request_historical_data(
-                    reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=combine_fn, atDatapointUpdateFn=lambda x, y: None, technicalIndicators=technical_indicators, fileToSave=file_to_save)
+                    reqID=id, contract=contract, interval=interval, timePeriod=timePeriod, dataType='MIDPOINT', rth=0, timeFormat=2, keepUpToDate=False, atDatapointFn=rhd_cb.handle, afterAllDataFn=process_contract_data, atDatapointUpdateFn=lambda x, y: None, technicalIndicators=technical_indicators, fileToSave=file_to_save, candlestickData=candlestick_data)
                 id += 1
             else:
                 print("File already exists. Loading data from CSV")
                 df = pd.read_csv(file_to_save, index_col=[0])
-                combine_fn_file(df, technical_indicators, file_to_save, contract)
+                process_contract_data(df, technical_indicators, file_to_save, contract)
     ########################### REQUEST HISTORICAL DATA #################################
 
     while True:

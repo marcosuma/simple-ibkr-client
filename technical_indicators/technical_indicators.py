@@ -16,25 +16,9 @@ class TechnicalIndicators(object):
         self.fileToSave = fileToSave
         pass
 
-    def process_data_with_file(self, df) -> pd.DataFrame:
-        print("Data loaded from file")
+    def execute(self, df) -> pd.DataFrame:
         self.__fn_impl(df)
         df.to_csv(self.fileToSave) if self.fileToSave is not None else None
-        return df
-
-    def process_data(self, reqId: int, start: str, end: str):
-        df = pd.DataFrame(
-            data=np.array(self.candlestickData),
-            columns=["date", "open", "close", "high", "low", "volume"],
-        )
-        df["date"] = df["date"].astype(int)
-        df["close"] = df["close"].astype(float)
-        df["open"] = df["open"].astype(float)
-        df["high"] = df["high"].astype(float)
-        df["low"] = df["low"].astype(float)
-
-        self.__fn_impl(df)
-        df.to_csv(self.fileToSave)
         return df
 
     def __fn_impl(self, df: pd.DataFrame):
