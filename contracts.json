@@ -34,7 +34,49 @@
         "symbol": "AUD",
         "secType": "CASH",
         "exchange": "IDEALPRO",
+        "currency": "HKD"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "JPY"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
         "currency": "CHF"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "HKD"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "JPY"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "SGD"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "NZD"
+      },
+      {
+        "symbol": "AUD",
+        "secType": "CASH",
+        "exchange": "IDEALPRO",
+        "currency": "USD"
       }
     ]
 }
