@@ -1,82 +1,23 @@
 {
-    "contracts": [
-      {
-        "symbol": "ETH",
-        "secType": "CRYPTO",
-        "exchange": "PAXOS",
-        "currency": "USD"
-      },
-      {
-        "symbol": "GBP",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "NZD"
-      },
-      {
-        "symbol": "EUR",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "USD"
-      },
-      {
-        "symbol": "GBP",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "USD"
-      },
-      {
-        "symbol": "CAD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "CHF"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "HKD"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "JPY"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "CHF"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "HKD"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "JPY"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "SGD"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "NZD"
-      },
-      {
-        "symbol": "AUD",
-        "secType": "CASH",
-        "exchange": "IDEALPRO",
-        "currency": "USD"
-      }
-    ]
+  "contracts": [
+    "USD,CAD,CASH,IDEALPRO",
+    "EUR,JPY,CASH,IDEALPRO",
+    "EUR,USD,CASH,IDEALPRO",
+    "EUR,CHF,CASH,IDEALPRO",
+    "USD,CHF,CASH,IDEALPRO",
+    "EUR,GBP,CASH,IDEALPRO",
+    "GBP,USD,CASH,IDEALPRO",
+    "AUD,CAD,CASH,IDEALPRO",
+    "NZD,USD,CASH,IDEALPRO",
+    "GBP,CHF,CASH,IDEALPRO",
+    "AUD,USD,CASH,IDEALPRO",
+    "GBP,JPY,CASH,IDEALPRO",
+    "USD,JPY,CASH,IDEALPRO",
+    "CHF,JPY,CASH,IDEALPRO",
+    "EUR,CAD,CASH,IDEALPRO",
+    "AUD,JPY,CASH,IDEALPRO",
+    "EUR,AUD,CASH,IDEALPRO",
+    "AUD,NZD,CASH,IDEALPRO",
+    "ETH,USD,CRYPTO,PAXOS"
+  ]
 }

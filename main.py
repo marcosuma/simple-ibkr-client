@@ -168,10 +168,12 @@ if __name__ == "__main__":
         for _contract in data["contracts"]:
             candlestick_data = []            
             contract = Contract()
-            contract.symbol = _contract["symbol"]
-            contract.secType = _contract["secType"]
-            contract.exchange = _contract["exchange"]
-            contract.currency = _contract["currency"]
+            fields = str.split(_contract, ",")
+            print(fields)
+            contract.symbol = fields[0]
+            contract.currency = fields[1]
+            contract.secType = fields[2]
+            contract.exchange = fields[3]
             rhd_object = rhd.RequestHistoricalData(client, callbackFnMap, contextMap)
             rhd_cb = rhd_callback.Callback(candlestick_data)
             interval = "6 M"
