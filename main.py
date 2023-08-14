@@ -142,11 +142,11 @@ if __name__ == "__main__":
         df = technical_indicators.execute(df)
         # _ = RSIStrategy().execute(df)
         # printStrategyMarkersFn = HammerShootingStar().execute(df)
-        # printStrategyMarkersFn = MARSIStrategy().execute(df)
+        marsiStrategyMarkersFn = MARSIStrategy().execute(df)
         srv1 = SupportResistanceV1(plots_queue, file_to_save)
-        printStrategyMarkersFn, y_lines = srv1.execute(df)
+        srv1MarkersFn, y_lines = srv1.execute(df)
         # SupportResistance(candlestick_data, plots_queue, file_to_save).process_data_with_file(df)
-        Plot(df, plots_queue, contract).plot(printStrategyMarkersFn)
+        Plot(df, plots_queue, contract).plot(marsiStrategyMarkersFn, srv1MarkersFn)
         # LSTMModelTrainer(plots_queue, file_to_save).process_data(df)
 
         # df, model = SVMModelTrainer(

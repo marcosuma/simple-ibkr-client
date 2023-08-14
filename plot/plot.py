@@ -9,7 +9,7 @@ class Plot(object):
         self.plotsQueue = plotsQueue
         self.contract = contract
 
-    def plot(self, printStrategyMarkersFn):
+    def plot(self, *printStrategyMarkersFns):
         df = self.df
         plotsQueue = self.plotsQueue
 
@@ -32,7 +32,8 @@ class Plot(object):
                 col=1,
             )
 
-            printStrategyMarkersFn(fig)
+            for fn in printStrategyMarkersFns:
+                fn(fig)
 
             # # EMA 10
             # fig.append_trace(
