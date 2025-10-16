@@ -120,6 +120,38 @@ python main.py
     cached CSVs from `data/`, computes indicators, runs strategies, and renders
     plots in a loop.
 
+### Running with Docker
+
+- IBKR connectivity from a container requires reaching your host's TWS/Gateway.
+  By default `main.py` uses `127.0.0.1`, which from inside Docker refers to the
+  container itself. Use one of the following:
+
+  1. Change IBKR host in `main.py` to `host.docker.internal`:
+     - Replace `client.connect('127.0.0.1', 7497, 123)` with
+       `client.connect('host.docker.internal', 7497, 123)`.
+
+  2. Or add a compose override to resolve `host.docker.internal`:
+     - Add `extra_hosts: ["host.docker.internal:host-gateway"]` to the service.
+
+- Build and run:
+
+```
+docker compose up --build
+```
+
+- For debug mode (waits for debugger on port 5678):
+
+```
+docker compose -f docker-compose.debug.yml up --build
+```
+
+- Ensure TWS/Gateway is running on your host at port 7497 before starting the
+  container. Create a `data/` folder if you want cached CSVs persisted:
+
+```
+mkdir -p data
+```
+
 ### Configuration
 
 - `contracts.json`: Controls which instruments are processed.
@@ -168,6 +200,33 @@ python main.py
 - IBKR order placement code is scaffolded but disabled by default. OANDA
   execution is active.
 - Requires IBKR TWS/Gateway running locally and valid OANDA credentials.
+
+### Troubleshooting
+
+- Stuck on "Waiting for connection to server":
+  - Verify TWS/Gateway is running, API enabled, and listening on the expected
+    port (default paper: 7497).
+  - Native run: host should be `127.0.0.1`.
+  - Docker run: host should be `host.docker.internal` (or use compose
+    `extra_hosts`).
+
+- OANDA errors about authentication or permissions:
+  - Confirm `.env` contains valid `OANDA_ACCESS_TOKEN` and `OANDA_ACCOUNT_ID`.
+  - Check account type (practice vs live) and instrument permissions.
+
+- `TA_Lib` import errors (native):
+  - Install system lib first, then Python package. On macOS:
+
+```
+brew install ta-lib
+pip install TA-Lib
+```
+
+- No plots appear:
+  - Ensure the process remains running; plots are executed from a queue in the
+    main loop. Give it time to fetch data and compute indicators.
+  - Check that the instrument in `contracts.json` returns data for the chosen
+    `interval` and `timePeriod`.
 
 ### Disclaimer
 
