@@ -88,39 +88,83 @@ See `requirements.txt` for Python dependencies, including `pandas`, `numpy`,
 `TA_Lib`, `pandas_ta`, `scikit-learn`, `keras`, `matplotlib`, `plotly`, and
 `Backtesting`.
 
-### Setup
+### Behavior:
 
-1. Install Python 3.9+ and TA-Lib system deps (varies by OS).
-2. Install dependencies:
-   - `pip install -r requirements.txt`
-3. IBKR TWS/Gateway:
-   - Ensure TWS/Gateway is running and API is enabled on `127.0.0.1:7497`.
-4. OANDA credentials:
-   - Create a `.env` file with:
+Connects to IBKR, starts threads, iterates contracts, fetches data or loads
+cached CSVs from `data/`, computes indicators, runs strategies, and renders
+plots in a loop.
+
+### Running with Python virtual environment (macOS)
+
+#### 1) Install system dependency (TA-Lib)
 
 ```
+brew install ta-lib
+```
+
+#### 2) Create and activate a virtual environment
+
+```
+cd /Users/marco.suma/Personal/trading-bot
+python3 -m venv .venv
+source .venv/bin/activate
+```
+
+#### 3) Install Python dependencies
+
+```
+pip install --upgrade pip setuptools
+pip install -r requirements.txt
+```
+
+#### 4) Add OANDA credentials
+
+Create a `.env` file in the project root:
+
+```
+cat > .env << 'EOF'
 OANDA_ACCESS_TOKEN=your_token
 OANDA_ACCOUNT_ID=your_account_id
+EOF
 ```
 
-5. Configure contracts in `contracts.json`:
-   - Provide entries like "SYMBOL,CURRENCY,SECTYPE,EXCHANGE" per line in the
-     `contracts` array.
+#### 5) Prepare data directory
 
-### Running
+```
+mkdir -p data
+```
 
-- Start the orchestrator:
+#### 6) Start IBKR TWS/Gateway
+
+- Launch TWS/Gateway (Paper recommended).
+- Enable API: File → Global Configuration → API → Settings:
+  - Check “Enable ActiveX and Socket Clients”
+  - Socket port: 7497
+  - Add 127.0.0.1 to “Trusted IPs”
+
+#### 7) Run the application
 
 ```
 python main.py
 ```
 
-- Behavior:
-  - Connects to IBKR, starts threads, iterates contracts, fetches data or loads
-    cached CSVs from `data/`, computes indicators, runs strategies, and renders
-    plots in a loop.
+You should see it connect to IBKR, iterate `contracts.json`, fetch/cached data,
+compute indicators/strategies, and render plots. Provide entries like
+"SYMBOL,CURRENCY,SECTYPE,EXCHANGE" per line in the `contracts` array.
 
-### Running with Docker
+#### 8) Deactivate the environment (when done)
+
+```
+deactivate
+```
+
+Notes:
+
+- If you get TA-Lib import errors, ensure step 1 ran before step 3.
+- If stuck on “Waiting for connection to server”, verify TWS is running, API is
+  enabled, and port is 7497.
+
+### Running with Docker (NOT TESTED)
 
 - IBKR connectivity from a container requires reaching your host's TWS/Gateway.
   By default `main.py` uses `127.0.0.1`, which from inside Docker refers to the
